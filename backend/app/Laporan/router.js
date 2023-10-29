@@ -14,7 +14,6 @@ const {
   postLaporanByAnonim,
   updateStatusLaporanInvestigasi,
   updateStatusLaporanSelesai,
-  updateStatusLaporanKedaluwarsa,
 } = require("./controller");
 
 const VerifyTokenAdmin = require("../../middleware/VerifyTokenAdmin");
@@ -37,6 +36,5 @@ router.post("/laporan/anonim", upload.single("gambar"), postLaporanByAnonim);
 
 router.patch("/laporan/status/investigasi/:id_laporan", VerifyTokenAdmin, updateStatusLaporanInvestigasi);
 router.patch("/laporan/status/selesai/:id_laporan", VerifyTokenAdmin, updateStatusLaporanSelesai);
-router.patch("/laporan/status/kedaluwarsa/:id_laporan", VerifyTokenAdmin, updateStatusLaporanKedaluwarsa);
 
 module.exports = router;

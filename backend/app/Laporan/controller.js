@@ -5,246 +5,19 @@ const fs = require("fs");
 const path = require("path");
 const db = require("../../database");
 const JenisPasien = require("../JenisPasien/model");
-const formatTime = require("../../utils/formatTime");
 const { Op, Sequelize } = require("sequelize");
+const moment = require("moment-timezone");
 
 //@description     Get All Laporan User Latest Order
-//@route           GET /api/laporan?status
+//@route           GET /api/laporan?status=&month=&year=
 //@access          Public
-const getAllLaporan = async (req, res, next) => {
+const getAllLaporan = async (req, res) => {
   try {
     const status = req.query.status;
     const month = req.query.month;
     const year = req.query.year;
     let laporan;
-    // if (status === "dalam antrian" || status === "investigasi") {
-    //   console.log("masuk sini cuy: ", status);
-    //   const laporan = await Laporan.findAll({
-    //     where: {
-    //       status,
-    //     },
-    //     attributes: [
-    //       "id_laporan",
-    //       "nama_pasien",
-    //       "no_rekam_medis",
-    //       "ruangan",
-    //       "umur",
-    //       "asuransi",
-    //       "jenis_kelamin_pasien",
-    //       "waktu_mendapatkan_pelayanan",
-    //       "waktu_kejadian_insiden",
-    //       "insiden",
-    //       "kronologis_insiden",
-    //       "insiden_terjadi_pada_pasien",
-    //       "dampak_insiden_terhadap_pasien",
-    //       "probabilitas",
-    //       "orang_pertama_melaporkan_insiden",
-    //       // jenis pasien
-    //       "tempat_insiden",
-    //       "departement_penyebab_insiden",
-    //       "tindak_lanjut_setelah_kejadian_dan_hasil",
-    //       "yang_melakukan_tindak_lanjut_setelah_insiden",
-    //       "kejadian_sama_pernah_terjadi_di_unit_lain",
-    //       "status",
-    //       "tanggal_laporan_dikirim",
-    //       "gambar",
-    //     ],
-    //     order: [["tanggal_laporan_dikirim", "DESC"]],
-    //     include: [
-    //       {
-    //         model: User,
-    //         attributes: ["username", "id_user"],
-    //       },
-    //       {
-    //         model: JenisPasien,
-    //         attributes: ["id_jenis_pasien", "nama_jenis_pasien"],
-    //       },
-    //     ],
-    //   });
 
-    //   const revLaporan = laporan.map((item) => ({
-    //     id_laporan: item.id_laporan,
-    //     nama_pasien: item.nama_pasien,
-    //     no_rekam_medis: item.no_rekam_medis,
-    //     ruangan: item.ruangan,
-    //     umur: item.umur,
-    //     asuransi: item.asuransi,
-    //     jenis_kelamin_pasien: item.jenis_kelamin_pasien,
-    //     waktu_mendapatkan_pelayanan: formatTime(item.waktu_mendapatkan_pelayanan),
-    //     waktu_kejadian_insiden: formatTime(item.waktu_kejadian_insiden),
-    //     insiden: item.insiden,
-    //     kronologis_insiden: item.kronologis_insiden,
-    //     insiden_terjadi_pada_pasien: item.insiden_terjadi_pada_pasien,
-    //     dampak_insiden_terhadap_pasien: item.dampak_insiden_terhadap_pasien,
-    //     probabilitas: item.probabilitas,
-    //     orang_pertama_melaporkan_insiden: item.orang_pertama_melaporkan_insiden,
-    //     jenis_pasien: item.jenis_pasien.nama_jenis_pasien,
-    //     tempat_insiden: item.tempat_insiden,
-    //     departement_penyebab_insiden: item.departement_penyebab_insiden,
-    //     tindak_lanjut_setelah_kejadian_dan_hasil: item.tindak_lanjut_setelah_kejadian_dan_hasil,
-    //     yang_melakukan_tindak_lanjut_setelah_insiden: item.yang_melakukan_tindak_lanjut_setelah_insiden,
-    //     kejadian_sama_pernah_terjadi_di_unit_lain: item.kejadian_sama_pernah_terjadi_di_unit_lain,
-    //     status: item.status,
-    //     tanggal_laporan_dikirim: formatTime(item.tanggal_laporan_dikirim),
-    //     gambar: item.gambar,
-    //   }));
-
-    //   res.status(200).json({
-    //     code: "200",
-    //     status: "OK",
-    //     data: revLaporan,
-    //   });
-    // } else if (status === "laporan selesai" || status === "laporan ditolak") {
-    //   const laporan = await Laporan.findAll({
-    //     where: {
-    //       status,
-    //     },
-    //     attributes: [
-    //       "id_laporan",
-    //       "nama_pasien",
-    //       "no_rekam_medis",
-    //       "ruangan",
-    //       "umur",
-    //       "asuransi",
-    //       "jenis_kelamin_pasien",
-    //       "waktu_mendapatkan_pelayanan",
-    //       "waktu_kejadian_insiden",
-    //       "insiden",
-    //       "kronologis_insiden",
-    //       "insiden_terjadi_pada_pasien",
-    //       "dampak_insiden_terhadap_pasien",
-    //       "probabilitas",
-    //       "orang_pertama_melaporkan_insiden",
-    //       // jenis pasien
-    //       "tempat_insiden",
-    //       "departement_penyebab_insiden",
-    //       "tindak_lanjut_setelah_kejadian_dan_hasil",
-    //       "yang_melakukan_tindak_lanjut_setelah_insiden",
-    //       "kejadian_sama_pernah_terjadi_di_unit_lain",
-    //       "status",
-    //       "tanggal_laporan_dikirim",
-    //       "gambar",
-    //     ],
-    //     order: [["tanggal_laporan_dikirim", "DESC"]],
-    //     include: [
-    //       {
-    //         model: User,
-    //         attributes: ["username", "id_user"],
-    //       },
-    //       {
-    //         model: JenisPasien,
-    //         attributes: ["id_jenis_pasien", "nama_jenis_pasien"],
-    //       },
-    //     ],
-    //   });
-
-    //   const revLaporan = laporan.map((item) => ({
-    //     id_laporan: item.id_laporan,
-    //     nama_pasien: item.nama_pasien,
-    //     no_rekam_medis: item.no_rekam_medis,
-    //     ruangan: item.ruangan,
-    //     umur: item.umur,
-    //     asuransi: item.asuransi,
-    //     jenis_kelamin_pasien: item.jenis_kelamin_pasien,
-    //     waktu_mendapatkan_pelayanan: formatTime(item.waktu_mendapatkan_pelayanan),
-    //     waktu_kejadian_insiden: formatTime(item.waktu_kejadian_insiden),
-    //     insiden: item.insiden,
-    //     kronologis_insiden: item.kronologis_insiden,
-    //     insiden_terjadi_pada_pasien: item.insiden_terjadi_pada_pasien,
-    //     dampak_insiden_terhadap_pasien: item.dampak_insiden_terhadap_pasien,
-    //     probabilitas: item.probabilitas,
-    //     orang_pertama_melaporkan_insiden: item.orang_pertama_melaporkan_insiden,
-    //     jenis_pasien: item.jenis_pasien.nama_jenis_pasien,
-    //     tempat_insiden: item.tempat_insiden,
-    //     departement_penyebab_insiden: item.departement_penyebab_insiden,
-    //     tindak_lanjut_setelah_kejadian_dan_hasil: item.tindak_lanjut_setelah_kejadian_dan_hasil,
-    //     yang_melakukan_tindak_lanjut_setelah_insiden: item.yang_melakukan_tindak_lanjut_setelah_insiden,
-    //     kejadian_sama_pernah_terjadi_di_unit_lain: item.kejadian_sama_pernah_terjadi_di_unit_lain,
-    //     status: item.status,
-    //     tanggal_laporan_dikirim: formatTime(item.tanggal_laporan_dikirim),
-    //     gambar: item.gambar,
-    //   }));
-
-    //   res.status(200).json({
-    //     code: "200",
-    //     status: "OK",
-    //     data: revLaporan,
-    //   });
-    // }
-    // else {
-    //   const laporan = await Laporan.findAll({
-    //     attributes: [
-    //       "id_laporan",
-    //       "nama_pasien",
-    //       "no_rekam_medis",
-    //       "ruangan",
-    //       "umur",
-    //       "asuransi",
-    //       "jenis_kelamin_pasien",
-    //       "waktu_mendapatkan_pelayanan",
-    //       "waktu_kejadian_insiden",
-    //       "insiden",
-    //       "kronologis_insiden",
-    //       "insiden_terjadi_pada_pasien",
-    //       "dampak_insiden_terhadap_pasien",
-    //       "probabilitas",
-    //       "orang_pertama_melaporkan_insiden",
-    //       // jenis pasien
-    //       "tempat_insiden",
-    //       "departement_penyebab_insiden",
-    //       "tindak_lanjut_setelah_kejadian_dan_hasil",
-    //       "yang_melakukan_tindak_lanjut_setelah_insiden",
-    //       "kejadian_sama_pernah_terjadi_di_unit_lain",
-    //       "status",
-    //       "tanggal_laporan_dikirim",
-    //       "gambar",
-    //     ],
-    //     order: [["tanggal_laporan_dikirim", "DESC"]],
-    //     include: [
-    //       {
-    //         model: User,
-    //         attributes: ["username", "id_user"],
-    //       },
-    //       {
-    //         model: JenisPasien,
-    //         attributes: ["id_jenis_pasien", "nama_jenis_pasien"],
-    //       },
-    //     ],
-    //   });
-
-    //   const revLaporan = laporan.map((item) => ({
-    //     id_laporan: item.id_laporan,
-    //     nama_pasien: item.nama_pasien,
-    //     no_rekam_medis: item.no_rekam_medis,
-    //     ruangan: item.ruangan,
-    //     umur: item.umur,
-    //     asuransi: item.asuransi,
-    //     jenis_kelamin_pasien: item.jenis_kelamin_pasien,
-    //     waktu_mendapatkan_pelayanan: formatTime(item.waktu_mendapatkan_pelayanan),
-    //     waktu_kejadian_insiden: formatTime(item.waktu_kejadian_insiden),
-    //     insiden: item.insiden,
-    //     kronologis_insiden: item.kronologis_insiden,
-    //     insiden_terjadi_pada_pasien: item.insiden_terjadi_pada_pasien,
-    //     dampak_insiden_terhadap_pasien: item.dampak_insiden_terhadap_pasien,
-    //     probabilitas: item.probabilitas,
-    //     orang_pertama_melaporkan_insiden: item.orang_pertama_melaporkan_insiden,
-    //     jenis_pasien: item.jenis_pasien.nama_jenis_pasien,
-    //     tempat_insiden: item.tempat_insiden,
-    //     departement_penyebab_insiden: item.departement_penyebab_insiden,
-    //     tindak_lanjut_setelah_kejadian_dan_hasil: item.tindak_lanjut_setelah_kejadian_dan_hasil,
-    //     yang_melakukan_tindak_lanjut_setelah_insiden: item.yang_melakukan_tindak_lanjut_setelah_insiden,
-    //     kejadian_sama_pernah_terjadi_di_unit_lain: item.kejadian_sama_pernah_terjadi_di_unit_lain,
-    //     status: item.status,
-    //     tanggal_laporan_dikirim: formatTime(item.tanggal_laporan_dikirim),
-    //     gambar: item.gambar,
-    //   }));
-
-    //   res.status(200).json({
-    //     code: "200",
-    //     status: "OK",
-    //     data: revLaporan,
-    //   });
-    // }
     if (status && month && year) {
       laporan = await Laporan.findAll({
         attributes: ["id_laporan", "nama_pasien", "insiden", "waktu_mendapatkan_pelayanan", "waktu_kejadian_insiden", "status", "tanggal_laporan_dikirim", "tanggal_laporan_kedaluwarsa", "gambar"],
@@ -296,11 +69,11 @@ const getAllLaporan = async (req, res, next) => {
       id_laporan: item.id_laporan,
       nama_pasien: item.nama_pasien,
       insiden: item.insiden,
-      waktu_mendapatkan_pelayanan: item.waktu_mendapatkan_pelayanan,
-      waktu_kejadian_insiden: item.waktu_kejadian_insiden,
+      waktu_mendapatkan_pelayanan: `${moment(item.waktu_mendapatkan_pelayanan).tz("Asia/Makassar")}`,
+      waktu_kejadian_insiden: `${moment(item.waktu_kejadian_insiden).tz("Asia/Makassar")}`,
       status: item.status,
-      tanggal_laporan_dikirim: item.tanggal_laporan_dikirim,
-      tanggal_laporan_kedaluwarsa: item.tanggal_laporan_kedaluwarsa,
+      tanggal_laporan_dikirim: `${moment(item.tanggal_laporan_dikirim).tz("Asia/Makassar")}`,
+      tanggal_laporan_kedaluwarsa: `${moment(item.tanggal_laporan_kedaluwarsa).tz("Asia/Makassar")}`,
       gambar: item.gambar,
     }));
 
@@ -322,7 +95,7 @@ const getAllLaporan = async (req, res, next) => {
 //@description     Get Laporan By Id Laporan untuk setiap status
 //@route           GET /api/laporan/:id_laporan?status=
 //@access          Public
-const getLaporanByIdLaporan = async (req, res, next) => {
+const getLaporanByIdLaporan = async (req, res) => {
   try {
     const id_laporan = req.params.id_laporan;
     const status = req.query.status;
@@ -387,8 +160,8 @@ const getLaporanByIdLaporan = async (req, res, next) => {
         umur: laporan.umur,
         asuransi: laporan.asuransi,
         jenis_kelamin_pasien: laporan.jenis_kelamin_pasien,
-        waktu_mendapatkan_pelayanan: laporan.waktu_mendapatkan_pelayanan,
-        waktu_kejadian_insiden: laporan.waktu_kejadian_insiden,
+        waktu_mendapatkan_pelayanan: `${moment(laporan.waktu_mendapatkan_pelayanan).tz("Asia/Makassar")}`,
+        waktu_kejadian_insiden: `${moment(laporan.waktu_kejadian_insiden).tz("Asia/Makassar")}`,
         insiden: laporan.insiden,
         kronologis_insiden: laporan.kronologis_insiden,
         insiden_terjadi_pada_pasien: laporan.insiden_terjadi_pada_pasien,
@@ -402,8 +175,8 @@ const getLaporanByIdLaporan = async (req, res, next) => {
         yang_melakukan_tindak_lanjut_setelah_insiden: laporan.yang_melakukan_tindak_lanjut_setelah_insiden,
         kejadian_sama_pernah_terjadi_di_unit_lain: laporan.kejadian_sama_pernah_terjadi_di_unit_lain,
         status: laporan.status,
-        tanggal_laporan_dikirim: laporan.tanggal_laporan_dikirim,
-        tanggal_laporan_kedaluwarsa: laporan.tanggal_laporan_kedaluwarsa,
+        tanggal_laporan_dikirim: `${moment(laporan.tanggal_laporan_dikirim).tz("Asia/Makassar")}`,
+        tanggal_laporan_kedaluwarsa: `${moment(laporan.tanggal_laporan_kedaluwarsa).tz("Asia/Makassar")}`,
         gambar: laporan.gambar,
 
         pelapor_id_user: laporan.pelapor ? laporan.pelapor.id_user : null,
@@ -416,7 +189,7 @@ const getLaporanByIdLaporan = async (req, res, next) => {
         investigator_username: laporan.investigator ? laporan.investigator.username : null,
         investigator_name: laporan.investigator ? laporan.investigator.name : null,
         investigator_job: laporan.investigator ? laporan.investigator.job : null,
-        investigator_role: laporan.investigator ? laporan.pelapor.role : null,
+        investigator_role: laporan.pelapor ? laporan.pelapor.role : null,
 
         id_kajian_laporan: null,
         jenis_insiden: null,
@@ -497,8 +270,8 @@ const getLaporanByIdLaporan = async (req, res, next) => {
         umur: laporan.laporan.umur,
         asuransi: laporan.laporan.asuransi,
         jenis_kelamin_pasien: laporan.laporan.jenis_kelamin_pasien,
-        waktu_mendapatkan_pelayanan: laporan.laporan.waktu_mendapatkan_pelayanan,
-        waktu_kejadian_insiden: laporan.laporan.waktu_kejadian_insiden,
+        waktu_mendapatkan_pelayanan: `${moment(laporan.laporan.waktu_mendapatkan_pelayanan).tz("Asia/Makassar")}`,
+        waktu_kejadian_insiden: `${moment(laporan.laporan.waktu_kejadian_insiden).tz("Asia/Makassar")}`,
         insiden: laporan.laporan.insiden,
         kronologis_insiden: laporan.laporan.kronologis_insiden,
         insiden_terjadi_pada_pasien: laporan.laporan.insiden_terjadi_pada_pasien,
@@ -512,8 +285,8 @@ const getLaporanByIdLaporan = async (req, res, next) => {
         yang_melakukan_tindak_lanjut_setelah_insiden: laporan.laporan.yang_melakukan_tindak_lanjut_setelah_insiden,
         kejadian_sama_pernah_terjadi_di_unit_lain: laporan.laporan.kejadian_sama_pernah_terjadi_di_unit_lain,
         status: laporan.laporan.status,
-        tanggal_laporan_dikirim: laporan.laporan.tanggal_laporan_dikirim,
-        tanggal_laporan_kedaluwarsa: laporan.laporan.tanggal_laporan_kedaluwarsa,
+        tanggal_laporan_dikirim: `${moment(laporan.laporan.tanggal_laporan_dikirim).tz("Asia/Makassar")}`,
+        tanggal_laporan_kedaluwarsa: `${moment(laporan.laporan.tanggal_laporan_kedaluwarsa).tz("Asia/Makassar")}`,
         gambar: laporan.laporan.gambar,
 
         pelapor_id_user: laporan.laporan.pelapor ? laporan.laporan.pelapor.id_user : null,
@@ -531,7 +304,7 @@ const getLaporanByIdLaporan = async (req, res, next) => {
         id_kajian_laporan: laporan.id_kajian_laporan,
         jenis_insiden: laporan.jenis_insiden,
         grading_risiko_kejadian: laporan.grading_risiko_kejadian,
-        tanggal_laporan_diterima: laporan.tanggal_laporan_diterima,
+        tanggal_laporan_diterima: `${moment(laporan.tanggal_laporan_diterima).tz("Asia/Makassar")}`,
       };
 
       res.status(200).json({
@@ -559,7 +332,7 @@ const getLaporanByIdLaporan = async (req, res, next) => {
 //@description     Get Laporan User By Id User desc order (Latest)
 //@route           GET /api/laporan/user/:id_user
 //@access          Public
-const getLaporanByUserId = async (req, res, next) => {
+const getLaporanByUserId = async (req, res) => {
   try {
     const id_user = req.params.id_user;
     console.log("ini id user: ", id_user);
@@ -575,7 +348,7 @@ const getLaporanByUserId = async (req, res, next) => {
     const revLaporan = laporan.map((item) => ({
       id_laporan: item.id_laporan,
       status: item.status,
-      tanggal_laporan_dikirim: item.tanggal_laporan_dikirim,
+      tanggal_laporan_dikirim: `${moment(item.tanggal_laporan_dikirim).tz("Asia/Makassar")}`,
       gambar: item.gambar,
     }));
 
@@ -597,7 +370,7 @@ const getLaporanByUserId = async (req, res, next) => {
 //@description     Get 3 Laporan User By Id User Latest order
 //@route           GET /api/laporan/user/latest/:id_user
 //@access          Public
-const getLatestThreeLaporanByUserId = async (req, res, next) => {
+const getLatestThreeLaporanByUserId = async (req, res) => {
   try {
     const id_user = req.params.id_user;
 
@@ -613,7 +386,7 @@ const getLatestThreeLaporanByUserId = async (req, res, next) => {
     const revLaporan = laporan.map((item) => ({
       id_laporan: item.id_laporan,
       status: item.status,
-      tanggal_laporan_dikirim: item.tanggal_laporan_dikirim,
+      tanggal_laporan_dikirim: `${moment(item.tanggal_laporan_dikirim).tz("Asia/Makassar")}`,
       gambar: item.gambar,
     }));
 
@@ -636,12 +409,12 @@ const getLatestThreeLaporanByUserId = async (req, res, next) => {
 //@route           GET /api/laporan/current/day
 //@access          Public
 const getLaporanToday = async (req, res) => {
-  console.log("masuk di get laporan today");
-  const TODAY_START = new Date().setHours(0, 0, 0, 0);
-  const NOW = new Date();
+  const TODAY_START = moment.tz("Asia/Makassar").startOf("day");
+  const NOW = moment.tz("Asia/Makassar");
 
-  console.log("TODAY START: ", TODAY_START);
-  console.log("NOW: ", NOW);
+  console.log("ini now: ", NOW);
+  console.log("ini today start: ", TODAY_START);
+
   try {
     const laporan = await Laporan.findAll({
       where: {
@@ -651,12 +424,13 @@ const getLaporanToday = async (req, res) => {
         },
       },
       order: [["tanggal_laporan_dikirim", "DESC"]],
+      limit: 10,
     });
 
     const revLaporan = laporan.map((item) => ({
       id_laporan: item.id_laporan,
       status: item.status,
-      tanggal_laporan_dikirim: item.tanggal_laporan_dikirim,
+      tanggal_laporan_dikirim: `${moment(item.tanggal_laporan_dikirim).tz("Asia/Makassar")}`,
       gambar: item.gambar,
     }));
 
@@ -679,9 +453,12 @@ const getLaporanToday = async (req, res) => {
 //@access          Public
 const getLaporanCurrentMonth = async (req, res) => {
   try {
-    const today = new Date();
-    const currentMonth = today.getMonth() + 1;
-    const currentYear = today.getFullYear();
+    const NOW = moment.tz("Asia/Makassar");
+
+    console.log("ini now: ", NOW);
+
+    const currentMonth = NOW.month() + 1;
+    const currentYear = NOW.year();
 
     console.log("ini current month: ", currentMonth);
     console.log("ini current year: ", currentYear);
@@ -692,12 +469,13 @@ const getLaporanCurrentMonth = async (req, res) => {
       },
       attributes: ["id_laporan", "status", "tanggal_laporan_dikirim", "gambar"],
       order: [["tanggal_laporan_dikirim", "DESC"]],
+      limit: 10,
     });
 
     const revLaporan = laporan.map((item) => ({
       id_laporan: item.id_laporan,
       status: item.status,
-      tanggal_laporan_dikirim: item.tanggal_laporan_dikirim,
+      tanggal_laporan_dikirim: `${moment(item.tanggal_laporan_dikirim).tz("Asia/Makassar")}`,
       gambar: item.gambar,
     }));
 
@@ -815,33 +593,12 @@ const getLaporanAmount = async (req, res) => {
 //@route           POST /api/laporan/user/:id_user
 //@access          Public
 const postLaporanByUser = async (req, res) => {
-  const options = {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-    hour12: false,
-  };
+  const NOW = moment.tz("Asia/Makassar");
+  const tanggal_laporan_dikirim = NOW;
+  const tanggal_laporan_kedaluwarsa = NOW.clone().add(48, "hours");
 
-  const dateNow = new Date();
-
-  const tanggal_laporan_dikirim = new Date(
-    dateNow.toLocaleTimeString("en-US", {
-      timeZone: "Asia/Makassar",
-      ...options,
-    })
-  );
-
-  const tanggal_laporan_kedaluwarsa = new Date(
-    dateNow.toLocaleTimeString("en-US", {
-      timeZone: "Asia/Makassar",
-      ...options,
-    })
-  );
-  tanggal_laporan_kedaluwarsa.setHours(tanggal_laporan_kedaluwarsa.getHours() + 48);
-  // console.log("ini waktu sekarang loh: ", tanggalSekarang);
+  console.log("ini tanggal laporan dikirim: ", tanggal_laporan_dikirim);
+  console.log("ini tanggal laporan kedaluwarsa: ", tanggal_laporan_kedaluwarsa);
 
   const user = await User.findOne({
     where: {
@@ -863,7 +620,7 @@ const postLaporanByUser = async (req, res) => {
     const fileSize = req.file.size;
     const ext = path.extname(req.file.originalname);
 
-    url_gambar = `${req.protocol}://${req.get("host")}/images/${fileName}`;
+    url_gambar = `https://${req.get("host")}/images/${fileName}`;
     const allowedType = [".png", ".jpeg", ".jpg"];
 
     if (!allowedType.includes(ext.toLowerCase())) {
@@ -912,6 +669,8 @@ const postLaporanByUser = async (req, res) => {
     kejadian_sama_pernah_terjadi_di_unit_lain,
   } = req.body;
 
+  console.log("ini adalah waktu kejadian insiden: ", waktu_kejadian_insiden);
+
   if (
     (id_user,
     nama_pasien,
@@ -935,34 +694,6 @@ const postLaporanByUser = async (req, res) => {
     yang_melakukan_tindak_lanjut_setelah_insiden,
     kejadian_sama_pernah_terjadi_di_unit_lain)
   ) {
-    // untuk ambil waktu sekarang
-    // const date = new Date();
-    // const options = {
-    //   year: "numeric",
-    //   month: "2-digit",
-    //   day: "2-digit",
-    //   hour: "2-digit",
-    //   minute: "2-digit",
-    //   second: "2-digit",
-    //   hour12: false,
-    // };
-
-    // const witaTime = date.toLocaleTimeString("en-US", {
-    //   timeZone: "Asia/Makassar",
-    //   ...options,
-    // });
-
-    // const dateMoUbah = witaTime;
-    // const tanggal = dateMoUbah.split(", ")[0].split("/");
-    // const waktu = dateMoUbah.split(", ")[1];
-
-    // const tahun = tanggal[2];
-    // const bulan = tanggal[0];
-    // const day = tanggal[1];
-    // const tanggal_laporan_dikirim = `${tahun}-${bulan}-${day}:${waktu}`;
-
-    // console.log("ini waktu indonesia tengah: ", tanggal_laporan_dikirim);
-
     try {
       const laporan = await Laporan.create({
         id_user,
@@ -1019,37 +750,16 @@ const postLaporanByUser = async (req, res) => {
 const postLaporanByAnonim = async (req, res) => {
   let url_gambar = null;
 
-  const options = {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-    hour12: false,
-  };
+  const tanggal_laporan_dikirim = moment.tz("Asia/Makassar");
+  const tanggal_laporan_kedaluwarsa = tanggal_laporan_dikirim.clone().add(48, "hours");
 
-  const dateNow = new Date();
-
-  const tanggal_laporan_dikirim = new Date(
-    dateNow.toLocaleTimeString("en-US", {
-      timeZone: "Asia/Makassar",
-      ...options,
-    })
-  );
-
-  const tanggal_laporan_kedaluwarsa = new Date(
-    dateNow.toLocaleTimeString("en-US", {
-      timeZone: "Asia/Makassar",
-      ...options,
-    })
-  );
   if (req.file) {
     const fileName = req.file.originalname;
     const fileSize = req.file.size;
     const ext = path.extname(req.file.originalname);
 
-    url_gambar = `${req.protocol}://${req.get("host")}/images/${fileName}`;
+    url_gambar = `https://${req.get("host")}/images/${fileName}`;
+    console.log("url gambar: ", url_gambar);
     const allowedType = [".png", ".jpeg", ".jpg"];
 
     if (!allowedType.includes(ext.toLowerCase())) {
@@ -1119,34 +829,6 @@ const postLaporanByAnonim = async (req, res) => {
     yang_melakukan_tindak_lanjut_setelah_insiden,
     kejadian_sama_pernah_terjadi_di_unit_lain)
   ) {
-    // untuk ambil waktu sekarang
-    // const date = new Date();
-    // const options = {
-    //   year: "numeric",
-    //   month: "2-digit",
-    //   day: "2-digit",
-    //   hour: "2-digit",
-    //   minute: "2-digit",
-    //   second: "2-digit",
-    //   hour12: false,
-    // };
-
-    // const witaTime = date.toLocaleTimeString("en-US", {
-    //   timeZone: "Asia/Makassar",
-    //   ...options,
-    // });
-
-    // const dateMoUbah = witaTime;
-    // const tanggal = dateMoUbah.split(", ")[0].split("/");
-    // const waktu = dateMoUbah.split(", ")[1];
-
-    // const tahun = tanggal[2];
-    // const bulan = tanggal[0];
-    // const day = tanggal[1];
-    // const tanggal_laporan_dikirim = `${tahun}-${bulan}-${day}:${waktu}`;
-
-    // console.log("ini waktu indonesia tengah: ", tanggal_laporan_dikirim);
-
     try {
       const laporan = await Laporan.create({
         nama_pasien,
@@ -1280,30 +962,7 @@ const updateStatusLaporanSelesai = async (req, res) => {
   const id_laporan = req.params.id_laporan;
   const { jenis_insiden, grading_risiko_kejadian } = req.body;
 
-  const tanggal_laporan_diterima = new Date();
-  // const options = {
-  //   year: "numeric",
-  //   month: "2-digit",
-  //   day: "2-digit",
-  //   hour: "2-digit",
-  //   minute: "2-digit",
-  //   second: "2-digit",
-  //   hour12: false,
-  // };
-
-  // const witaTime = date.toLocaleTimeString("en-US", {
-  //   timeZone: "Asia/Makassar",
-  //   ...options,
-  // });
-
-  // const dateMoUbah = witaTime;
-  // const tanggal = dateMoUbah.split(", ")[0].split("/");
-  // const waktu = dateMoUbah.split(", ")[1];
-
-  // const tahun = tanggal[2];
-  // const bulan = tanggal[0];
-  // const day = tanggal[1];
-  // const tanggal_laporan_diterima = `${tahun}-${bulan}-${day}:${waktu}`;
+  const tanggal_laporan_diterima = moment.tz("Asia/Makassar");
 
   if (jenis_insiden && grading_risiko_kejadian) {
     const t = await db.transaction();
@@ -1358,87 +1017,6 @@ const updateStatusLaporanSelesai = async (req, res) => {
   }
 };
 
-//@description     Update status laporan 'kedaluwarsa'
-//@route           PATCH /api/laporan/status_laporan/kedaluwarsa/:id_laporan
-//@access          Public
-const updateStatusLaporanKedaluwarsa = async (req, res) => {
-  const id_laporan = req.params.id_laporan;
-  // const { jenis_insiden, grading_risiko_kejadian } = req.body;
-
-  // const date = new Date();
-  // const options = {
-  //   year: "numeric",
-  //   month: "2-digit",
-  //   day: "2-digit",
-  //   hour: "2-digit",
-  //   minute: "2-digit",
-  //   second: "2-digit",
-  //   hour12: false,
-  // };
-
-  // const witaTime = date.toLocaleTimeString("en-US", {
-  //   timeZone: "Asia/Makassar",
-  //   ...options,
-  // });
-
-  // const dateMoUbah = witaTime;
-  // const tanggal = dateMoUbah.split(", ")[0].split("/");
-  // const waktu = dateMoUbah.split(", ")[1];
-
-  // const tahun = tanggal[2];
-  // const bulan = tanggal[0];
-  // const day = tanggal[1];
-  // const tanggal_laporan_diterima = `${tahun}-${bulan}-${day}:${waktu}`;
-
-  // if (jenis_insiden && grading_risiko_kejadian) {
-
-  // } else {
-  //   res.status(400).json({
-  //     code: "400",
-  //     status: "BAD_REQUEST",
-  //     errors: "jenis_insiden and grading_risiko_kejadian are required",
-  //   });
-  // }
-
-  console.log("ini JERICO: ", id_laporan);
-
-  try {
-    const laporan = await Laporan.update(
-      {
-        status: "laporan kedaluwarsa",
-      },
-      {
-        where: {
-          id_laporan,
-        },
-      }
-    );
-
-    // const laporan = await Laporan.update(
-    //   {
-    //     status: "laporan ditolak",
-    //   },
-    //   {
-    //     where: {
-    //       id_laporan,
-    //     },
-    //   }
-    // );
-
-    res.status(200).json({
-      code: "200",
-      status: "OK",
-      success: laporan[0] ? true : false,
-    });
-  } catch (error) {
-    res.status(500).json({
-      code: "500",
-      status: "INTERNAL_SERVER_ERROR",
-      errors: error.message,
-    });
-  }
-};
-
 module.exports = {
   getAllLaporan,
   getLaporanByIdLaporan,
@@ -1454,5 +1032,4 @@ module.exports = {
 
   updateStatusLaporanInvestigasi,
   updateStatusLaporanSelesai,
-  updateStatusLaporanKedaluwarsa,
 };

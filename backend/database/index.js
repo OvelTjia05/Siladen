@@ -6,6 +6,7 @@ const db = new Sequelize(dbName, dbUsername, dbPassword, {
   port,
   dialect: "mysql",
   // timezone: "Asia/Makassar",
+  timezone: "+08:00",
 });
 
 db.authenticate()
