@@ -32,6 +32,7 @@ import {ProfilePlaceHolder} from '../../assets/images';
 import {MyFont} from '../../components/atoms/MyFont';
 import {socket} from '../../../socket';
 import {API_HOST} from '../../../config';
+import PushNotification from 'react-native-push-notification';
 
 const screenW = Dimensions.get('screen').width;
 const w = screenW * 0.5;
@@ -64,7 +65,6 @@ const Settings = ({navigation}: any) => {
         {headers},
       );
       setTotalLaporan(response.data.data);
-      console.log('total laporan', response.data);
     } catch (error) {
       console.log(error);
     }
@@ -94,6 +94,14 @@ const Settings = ({navigation}: any) => {
       dispatch(saveJobAction(''));
 
       if (response.data.code === '200') {
+        if (role === 'user') {
+          await axios.patch(`${API_HOST}/api/user/device-token/${id_user}`, {
+            device_token: null,
+          });
+        } else {
+          PushNotification.unsubscribeFromTopic('admin');
+        }
+
         socket.off('message received');
         socket.off('admin received');
         socket.disconnect();
@@ -107,12 +115,12 @@ const Settings = ({navigation}: any) => {
       }
       setIsLoading(false);
     } catch (error: any) {
+      console.log('error logout', error);
       setIsLoading(false);
       Alert.alert(
         'Terjadi kesalahan',
         'Mohon coba lagi, jika kesalahan terus berlanjut silahkan hubungi Costumer Service',
       );
-      console.log('ini error login: ', error);
     }
   };
 
@@ -304,7 +312,7 @@ const styles = StyleSheet.create({
     resizeMode: 'cover',
   },
   modal: {
-    height: 200,
+    maxHeight: 250,
     width: '100%',
     maxWidth: 350,
     marginHorizontal: 20,

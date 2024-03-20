@@ -8,6 +8,7 @@ import {
   Pressable,
   Modal,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import React, {useState, useEffect} from 'react';
 import Title from '../../components/atoms/Title';
@@ -48,9 +49,6 @@ type JenisPasien = {
 
 const RincianKejadian = ({navigation, route}: any) => {
   const dispatch = useDispatch();
-  // const dataUser = useSelector((data: any) => data);
-  // const dataUser = route.params;
-
   const tokenSelector = useSelector((data: any) => data.token);
   const waktuInsidenSelector = useSelector((data: any) => data.waktuInsiden);
   const insidenSelector = useSelector((data: any) => data.insiden);
@@ -135,7 +133,7 @@ const RincianKejadian = ({navigation, route}: any) => {
     deskripsiPernahTerjadi: deskripsiPernahTerjadiSelector,
     pernahTerjadi: pernahTerjadiSelector,
   };
-
+  const [isLoading, setIsLoading] = useState(true);
   const [isDateTimePickerVisible, setDateTimePickerVisible] = useState(false);
   const [waktuInsiden, setWaktuInsiden] = useState(
     new Date(dataUser.waktuInsiden),
@@ -172,7 +170,6 @@ const RincianKejadian = ({navigation, route}: any) => {
   const [deskripsiPernahTerjadi, setDeskripsiPernahTerjadi] = useState(
     dataUser.deskripsiPernahTerjadi,
   );
-  // let pernahTerjadi = '';
   const [pernahTerjadi, setPernahTerjadi] = useState(dataUser.pernahTerjadi);
   const [isModalVisible, setIsModalVisible] = useState(false);
 
@@ -190,6 +187,7 @@ const RincianKejadian = ({navigation, route}: any) => {
       unitTerkait !== '' &&
       tindakLanjut !== '' &&
       tindakLanjutOleh !== '' &&
+      isPernahTerjadi !== undefined &&
       pernahTerjadi.length > 4
     );
   }
@@ -248,7 +246,6 @@ const RincianKejadian = ({navigation, route}: any) => {
     const handleDateConfirm = (date: Date) => {
       setWaktuInsiden(date);
       hideDateTimePicker();
-      console.log(date);
     };
 
     const formatDateTime = (date: Date) => {
@@ -435,47 +432,68 @@ const RincianKejadian = ({navigation, route}: any) => {
 
   const getJenisPasien = async () => {
     try {
+      setIsLoading(true);
       const headers = {
-        Authorization: `Bearer ${dataUser.token}`, // Tambahkan token ke header dengan format Bearer
+        Authorization: `Bearer ${dataUser.token}`,
       };
-      console.log('ini headers: ', dataUser.token);
       const response = await axios.get(`${API_HOST}/api/jenis_pasien`, {
         headers,
       });
-      console.log('ini response data: ', response.data.data);
+      setIsLoading(false);
       setJenisPasien(response.data.data);
     } catch (error) {
-      console.log(error);
+      setIsLoading(false);
+      Alert.alert(
+        'Terjadi kesalahan saat memuat data',
+        'Pastikan anda telah terhubung ke internet lalu coba lagi atau restart aplikasi',
+        [
+          {
+            text: 'Coba Lagi',
+            onPress: () => {
+              getJenisPasien();
+            },
+          },
+        ],
+      );
     }
   };
 
   const btnPasienTerkait = () => {
     const handlePasienTerkait = (option: number) => {
       setPasienTerkait(option);
-      console.log('pasien terkait: ', option);
     };
 
     return (
       <View style={styles.containerBtn}>
-        {jenisPasien?.map((item: any, index) => (
-          <TouchableOpacity
-            key={item.id_jenis_pasien}
-            style={[
-              styles.button,
-              pasienTerkait === item.id_jenis_pasien && styles.selectedButton,
-            ]}
-            onPress={() => {
-              handlePasienTerkait(item.id_jenis_pasien);
-            }}>
-            <Text
-              style={[
-                styles.txtButton,
-                pasienTerkait === item.id_jenis_pasien && styles.txtBtnActive,
-              ]}>
-              {item.nama_jenis_pasien}
-            </Text>
-          </TouchableOpacity>
-        ))}
+        {isLoading ? (
+          <View style={{flex: 1}}>
+            <ActivityIndicator size="large" color={MyColor.Primary} />
+          </View>
+        ) : (
+          <>
+            {jenisPasien?.map((item: any, index) => (
+              <TouchableOpacity
+                key={item.id_jenis_pasien}
+                style={[
+                  styles.button,
+                  pasienTerkait === item.id_jenis_pasien &&
+                    styles.selectedButton,
+                ]}
+                onPress={() => {
+                  handlePasienTerkait(item.id_jenis_pasien);
+                }}>
+                <Text
+                  style={[
+                    styles.txtButton,
+                    pasienTerkait === item.id_jenis_pasien &&
+                      styles.txtBtnActive,
+                  ]}>
+                  {item.nama_jenis_pasien}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </>
+        )}
       </View>
     );
   };
@@ -536,7 +554,6 @@ const RincianKejadian = ({navigation, route}: any) => {
   const btnDampakInsiden = () => {
     const handleDampakInsiden = (option: string) => {
       setDampakInsiden(option);
-      console.log('ini dampak insiden: ', option);
     };
     return (
       <View style={styles.containerBtn}>
@@ -631,7 +648,6 @@ const RincianKejadian = ({navigation, route}: any) => {
   const btnProbabilitas = () => {
     const handleProbabilitas = (option: string) => {
       setProbabilitas(option);
-      console.log('ini probabilitas: ', option);
     };
     return (
       <View style={styles.containerBtn}>
@@ -891,7 +907,6 @@ const RincianKejadian = ({navigation, route}: any) => {
         </Text>
         <Input
           style={styles.inputBox}
-          // placeholder="Nama anda"
           placeholderTextColor="#787878"
           onChangeText={setInsiden}
           value={insiden}
@@ -903,7 +918,6 @@ const RincianKejadian = ({navigation, route}: any) => {
         </Text>
         <Input
           style={styles.inputBox}
-          // placeholder="Nama anda"
           placeholderTextColor="#787878"
           onChangeText={setKronologiInsiden}
           value={kronologiInsiden}
@@ -915,17 +929,6 @@ const RincianKejadian = ({navigation, route}: any) => {
             (sesuai kasus penyakit/spesialisasi)
           </Text>
         </Text>
-        {/* <Input
-          style={styles.inputBox}
-          // placeholder="Penyakit dalam dan Subspesialisasinya"
-          placeholderTextColor="#787878"
-          onChangeText={setInsidenTerjadiPadaPasienOption}
-          value={insidenTerjadiPadaPasienOption}
-          multiline={true}
-        /> */}
-        {/* <Pressable>
-          <Text>(Silahkan pilih yang sesuai)</Text>
-        </Pressable> */}
         <Pressable
           style={[
             styles.InputContainer,

@@ -18,9 +18,9 @@ const Header = ({backgroundTransparent}: {backgroundTransparent?: boolean}) => {
       <Image source={Logo} style={styles.logo} />
       <View>
         <Text style={styles.txtRSUD}>
-          RSUD Dr. Sam Ratulangi Tondano{'\n'}Aplikasi Pelaporan Insiden{'\n'}
-          <Text style={styles.txt}>Siladen</Text>
+          RSUD Dr. Sam Ratulangi Tondano{'\n'}Aplikasi Pelaporan Insiden
         </Text>
+        <Text style={styles.txt}>Siladen</Text>
       </View>
     </View>
   );
@@ -34,22 +34,22 @@ const styles = StyleSheet.create({
     height: 76,
     columnGap: 20,
     flexDirection: 'row',
-    paddingHorizontal: 30,
+    paddingHorizontal: 20,
   },
   logo: {
-    height: 50,
-    width: 38,
+    height: 57,
+    width: 57,
     resizeMode: 'contain',
   },
   txtRSUD: {
     fontFamily: MyFont.Primary,
     fontSize: 11,
-    marginBottom: 0,
     color: 'grey',
   },
   txt: {
-    marginTop: 0,
+    lineHeight: 20,
     fontFamily: 'Poppins-Bold',
     fontSize: 16,
+    color: 'grey',
   },
 });

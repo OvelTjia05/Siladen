@@ -45,7 +45,7 @@ const styles = StyleSheet.create({
   },
   label: {
     textAlign: 'center',
-    fontFamily: MyFont.Primary,
+    fontFamily: 'Poppins-Medium',
     fontSize: 16,
   },
 });

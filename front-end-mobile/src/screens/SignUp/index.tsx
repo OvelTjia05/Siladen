@@ -86,15 +86,15 @@ const SignUp = ({navigation}: any) => {
     } else {
       try {
         const response = await axios.post(`${API_HOST}/auth/user/register`, {
-          name,
-          username,
-          password,
-          konfirmasi_password,
+          name: name.trim(),
+          username: username.trim(),
+          password: password.trim(),
+          konfirmasi_password: konfirmasi_password.trim(),
           job,
           role,
         });
-        console.log('ini respons registrasi: ', response.data.data);
         if (response.data.code == '201') {
+          // console.log('daftar', response);
           Alert.alert('Akun berhasil dibuat', undefined, [
             {text: 'OK', onPress: () => navigation.navigate('Login')},
           ]);
@@ -295,12 +295,13 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   logo: {
-    width: 33,
+    width: 43,
     height: 43,
   },
   logoContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    columnGap: 10,
   },
   txtLogo: {
     fontFamily: MyFont.Primary,

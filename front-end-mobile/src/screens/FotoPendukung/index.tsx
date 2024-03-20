@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
   PermissionsAndroid,
   Platform,
+  ActivityIndicator,
 } from 'react-native';
 import {
   launchCamera,
@@ -43,6 +44,7 @@ const FotoPendukung = ({navigation, route}: any) => {
   const imageCameraSelector = useSelector((data: any) => data.imageCamera);
   const dataUser = {imageCamera: imageCameraSelector};
   const [imageCamera, setImageCamera] = useState(dataUser.imageCamera);
+  const [isLoading, setIsLoading] = useState(false);
 
   const requestCameraPermission = async () => {
     if (Platform.OS === 'android') {
@@ -62,6 +64,7 @@ const FotoPendukung = ({navigation, route}: any) => {
   };
 
   const compressImage = async (data: ImageData) => {
+    setIsLoading(true);
     try {
       const resizedImage = await ImageResizer.createResizedImage(
         data.uri,
@@ -73,7 +76,7 @@ const FotoPendukung = ({navigation, route}: any) => {
         undefined,
         true,
       );
-
+      setIsLoading(false);
       setImageCamera({
         uri: resizedImage.uri,
         fileSize: resizedImage.size,
@@ -82,8 +85,8 @@ const FotoPendukung = ({navigation, route}: any) => {
         height: resizedImage.height,
         width: resizedImage.width,
       });
-      console.log('setelah resize', resizedImage);
     } catch (error) {
+      setIsLoading(false);
       console.error('Kesalahan saat mengompres gambar:', error);
     }
   };
@@ -102,12 +105,11 @@ const FotoPendukung = ({navigation, route}: any) => {
         console.log(res.errorMessage);
       } else {
         const data = res.assets?.[0] as ImageData;
-        if (data.fileSize > 2 * 1024 * 1024) {
+        if (data.fileSize > 1024 * 1024) {
           compressImage(data);
         } else {
           setImageCamera(data);
         }
-        console.log('ini isi image camera: ', data);
       }
     });
   };
@@ -125,13 +127,11 @@ const FotoPendukung = ({navigation, route}: any) => {
         console.log(res.errorMessage);
       } else {
         const data = res.assets?.[0] as ImageData;
-        console.log('ini sebelum resize: ', data);
-        if (data.fileSize > 2 * 1024 * 1024) {
+        if (data.fileSize > 1024 * 1024) {
           compressImage(data);
         } else {
           setImageCamera(data);
         }
-        console.log('ini isi imgae camera: ', data);
       }
     });
   };
@@ -147,7 +147,6 @@ const FotoPendukung = ({navigation, route}: any) => {
       if (fileSizeInMB > 2) {
         Alert.alert('Ukuran foto melebihi batas maksimal (2MB)');
       } else {
-        console.log(fileSizeInMB);
         navigation.navigate('SubmitLaporan');
       }
     }
@@ -165,24 +164,31 @@ const FotoPendukung = ({navigation, route}: any) => {
           pelaporan Anda
         </Text>
         <Gap height={40} />
-        {imageCamera && Object.keys(imageCamera).length !== 0 && (
-          <View style={styles.imageContainer}>
-            <View
-              style={{
-                backgroundColor: 'black',
-              }}>
-              <TouchableOpacity
-                style={styles.deleteImage}
-                onPress={() => setImageCamera(null)}>
-                <IconX />
-              </TouchableOpacity>
-              <Image source={{uri: imageCamera.uri}} style={styles.image} />
-            </View>
-            <Text style={[styles.txtBtnImage, {padding: 10}]}>
-              Ukuran gambar: {(imageCamera.fileSize / (1024 * 1024)).toFixed(2)}{' '}
-              MB
-            </Text>
+        {isLoading ? (
+          <View style={{height: 100}}>
+            <ActivityIndicator size="large" color={MyColor.Primary} />
           </View>
+        ) : (
+          imageCamera &&
+          Object.keys(imageCamera).length !== 0 && (
+            <View style={styles.imageContainer}>
+              <View
+                style={{
+                  backgroundColor: 'black',
+                }}>
+                <TouchableOpacity
+                  style={styles.deleteImage}
+                  onPress={() => setImageCamera(null)}>
+                  <IconX />
+                </TouchableOpacity>
+                <Image source={{uri: imageCamera.uri}} style={styles.image} />
+              </View>
+              <Text style={[styles.txtBtnImage, {padding: 10}]}>
+                Ukuran gambar:{' '}
+                {(imageCamera.fileSize / (1024 * 1024)).toFixed(2)} MB
+              </Text>
+            </View>
+          )
         )}
         <Gap height={10} />
         <TouchableOpacity style={styles.btnImage} onPress={openGallery}>

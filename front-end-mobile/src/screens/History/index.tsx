@@ -5,6 +5,7 @@ import {
   View,
   TouchableOpacity,
   Image,
+  ActivityIndicator,
 } from 'react-native';
 import React, {useState, useCallback} from 'react';
 import {useFocusEffect} from '@react-navigation/native';
@@ -40,6 +41,7 @@ const History = ({navigation, route}: any) => {
     id_user: idUser,
     token,
   };
+  const [isLoading, setIsLoading] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -48,8 +50,8 @@ const History = ({navigation, route}: any) => {
   );
 
   const getAllLaporan = async () => {
+    setIsLoading(true);
     if (dataUser.id_user) {
-      console.log('tes: ', dataUser);
       try {
         const headers = {
           Authorization: `Bearer ${dataUser.token}`,
@@ -58,11 +60,11 @@ const History = ({navigation, route}: any) => {
           `${API_HOST}/api/laporan/user/${dataUser.id_user}`,
           {headers},
         );
-        console.log('halo ', response.data);
+        setIsLoading(false);
         setLaporan(response.data.data);
       } catch (error: any) {
+        setIsLoading(false);
         console.log(error);
-        console.log('Ini response.data.data: ', error.response);
       }
     }
   };
@@ -156,74 +158,84 @@ const History = ({navigation, route}: any) => {
       <Header backgroundTransparent />
       <Gap height={20} />
       <View style={styles.container1}>
-        <Text
-          style={{
-            fontFamily: 'Poppins-Bold',
-            fontSize: 17,
-            color: MyColor.Primary,
-          }}>
-          Riwayat Laporan
-        </Text>
-        <Gap height={10} />
-        {laporan.length === 0 ? (
-          <View style={styles.cardTidakAdaLaporan}>
-            <Text style={styles.txtLaporanTerakhir}>
-              Anda belum membuat laporan apapun
+        {!isLoading ? (
+          <>
+            <Text
+              style={{
+                fontFamily: 'Poppins-Bold',
+                fontSize: 17,
+                color: MyColor.Primary,
+              }}>
+              Riwayat Laporan
             </Text>
-            <TouchableOpacity
-              style={styles.createReportButton}
-              onPress={() => navigation.navigate('BuatLaporan', dataUser)}>
-              <Text style={styles.createReportButtonText}>
-                Tekan disini untuk {'\n'}membuat laporan baru!
-              </Text>
-              <Image
-                source={IconLaporan}
-                resizeMode="contain"
-                style={{height: 45}}
-              />
-            </TouchableOpacity>
-          </View>
-        ) : (
-          <View style={styles.card}>
-            <Text style={styles.txt}>Berikut adalah riwayat laporan anda</Text>
             <Gap height={10} />
-            {laporan.map((item, index) => (
-              <TouchableOpacity
-                style={[
-                  styles.cardContent,
-                  {
-                    backgroundColor: getStatusColor(item.status),
-                  },
-                ]}
-                key={index}
-                onPress={() =>
-                  navigation.navigate('DetailLaporan', {
-                    id_laporan: item.id_laporan,
-                    status: item.status,
-                    // dataUser: dataUser,
-                  })
-                }>
-                <View style={{flexDirection: 'row', columnGap: 20}}>
+            {laporan.length === 0 ? (
+              <View style={styles.cardTidakAdaLaporan}>
+                <Text style={styles.txtLaporanTerakhir}>
+                  Anda belum membuat laporan apapun
+                </Text>
+                <TouchableOpacity
+                  style={styles.createReportButton}
+                  onPress={() => navigation.navigate('BuatLaporan', dataUser)}>
+                  <Text style={styles.createReportButtonText}>
+                    Tekan disini untuk {'\n'}membuat laporan baru!
+                  </Text>
                   <Image
-                    source={item.gambar ? {uri: item.gambar} : ImagePlaceHolder}
-                    style={styles.cardImage}
+                    source={IconLaporan}
+                    resizeMode="contain"
+                    style={{height: 45}}
                   />
-                  <View style={{width: 150}}>
-                    <Text style={styles.txtCardTime}>
-                      {formatHour(new Date(item.tanggal_laporan_dikirim))}
-                    </Text>
-                    <Text style={styles.txtCard}>
-                      {formatDate(new Date(item.tanggal_laporan_dikirim))}
-                    </Text>
-                    <Text style={styles.txtCardStatus}>
-                      {convertStatus(item.status)}
-                    </Text>
-                  </View>
-                </View>
-                {getStatusIcon(item.status)}
-              </TouchableOpacity>
-            ))}
-          </View>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <View style={styles.card}>
+                <Text style={styles.txt}>
+                  Berikut adalah riwayat laporan anda
+                </Text>
+                <Gap height={10} />
+                {laporan.map((item, index) => (
+                  <TouchableOpacity
+                    style={[
+                      styles.cardContent,
+                      {
+                        backgroundColor: getStatusColor(item.status),
+                      },
+                    ]}
+                    key={index}
+                    onPress={() =>
+                      navigation.navigate('DetailLaporan', {
+                        id_laporan: item.id_laporan,
+                        status: item.status,
+                        // dataUser: dataUser,
+                      })
+                    }>
+                    <View style={{flexDirection: 'row', columnGap: 20}}>
+                      <Image
+                        source={
+                          item.gambar ? {uri: item.gambar} : ImagePlaceHolder
+                        }
+                        style={styles.cardImage}
+                      />
+                      <View style={{width: 150}}>
+                        <Text style={styles.txtCardTime}>
+                          {formatHour(new Date(item.tanggal_laporan_dikirim))}
+                        </Text>
+                        <Text style={styles.txtCard}>
+                          {formatDate(new Date(item.tanggal_laporan_dikirim))}
+                        </Text>
+                        <Text style={styles.txtCardStatus}>
+                          {convertStatus(item.status)}
+                        </Text>
+                      </View>
+                    </View>
+                    {getStatusIcon(item.status)}
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
+          </>
+        ) : (
+          <ActivityIndicator size="large" color={MyColor.Primary} />
         )}
       </View>
     </ScrollView>

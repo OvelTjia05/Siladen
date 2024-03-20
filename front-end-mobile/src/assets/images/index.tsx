@@ -1,4 +1,4 @@
-import Logo from './Logo_rs.png';
+import Logo from './LogoRS.png';
 import BackgroundRS from './RSUD_Sam_Ratulangi_Tondano.png';
 import BackgroundRS1 from './RSUD_Sam_Ratulangi_Tondano_1.png';
 import Ilustrasi from './ilustrasi.png';

@@ -119,21 +119,17 @@ const Laporan = db.define(
     tanggal_laporan_dikirim: {
       type: DataTypes.DATE,
       allowNull: false,
-      // defaultValue: Sequelize.fn("NOW"),
     },
     tanggal_laporan_kedaluwarsa: {
       type: DataTypes.DATE,
       allowNull: false,
-      // defaultValue: new Date(new Date().getTime() + 48 * 60 * 60 * 1000),
-      // defaultValue: Sequelize.literal("DATE_ADD(NOW(), INTERVAL 48 HOUR TO SECOND)"),
-      // defaultValue: Sequelize.literal("DATE_ADD(NOW(), INTERVAL 5 MINUTE)"),
     },
     diinvestigasi_oleh: {
       type: DataTypes.UUID,
       allowNull: true,
     },
     gambar: {
-      type: DataTypes.TEXT,
+      type: DataTypes.BLOB("medium"),
       allowNull: true,
     },
   },

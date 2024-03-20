@@ -1,11 +1,4 @@
-import {
-  StyleSheet,
-  Text,
-  View,
-  ScrollView,
-  Image,
-  Dimensions,
-} from 'react-native';
+import {StyleSheet, Text, View, ScrollView, Image} from 'react-native';
 import React, {useState, useEffect} from 'react';
 import {
   IconCentang,
@@ -18,19 +11,16 @@ import {MyColor} from '../../components/atoms/MyColor';
 import Header from '../../components/molecules/Header';
 import {MyFont} from '../../components/atoms/MyFont';
 import Gap from '../../components/atoms/Gap';
-import {Ilustrasi, ImagePlaceHolder} from '../../assets/images';
+import {ImagePlaceHolder} from '../../assets/images';
 import axios from 'axios';
 import Title from '../../components/atoms/Title';
 import {useSelector} from 'react-redux';
 import {API_HOST} from '../../../config';
 
 const DetailLaporan = ({navigation, route}: any) => {
-  const windowWidth = Dimensions.get('window').width;
-
   const token = useSelector((data: any) => data.token);
   const [laporanDetail, setLaporanDetail] = useState<any | null>(null);
   const {id_laporan, status} = route.params;
-  console.log('ini page detail laporan: ', status, id_laporan);
 
   useEffect(() => {
     getLaporan();
@@ -46,7 +36,6 @@ const DetailLaporan = ({navigation, route}: any) => {
         {headers},
       );
       setLaporanDetail(response.data.data);
-      console.log('ini response.data.data', response.data.data);
     } catch (error) {
       console.log(error);
     }
@@ -300,12 +289,6 @@ const DetailLaporan = ({navigation, route}: any) => {
               }
               style={styles.img}
             />
-            {/* <Text>{laporanDetail.gambar}</Text> */}
-            <Text style={styles.txtImage}>
-              {laporanDetail.gambar
-                ? laporanDetail.gambar.split('/').pop()
-                : 'Tidak ada gambar'}
-            </Text>
           </View>
         )}
         <Gap height={20} />
@@ -410,7 +393,7 @@ const styles = StyleSheet.create({
   boxImage: {
     overflow: 'hidden',
     backgroundColor: MyColor.Light,
-    borderRadius: 10,
+    borderRadius: 20,
   },
   img: {
     height: 350,

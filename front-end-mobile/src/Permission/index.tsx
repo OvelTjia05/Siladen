@@ -27,9 +27,7 @@ const PERMISSIONS_TYPE = {
 
 class AppPermission {
   checkPermission = async (type: string): Promise<boolean> => {
-    console.log('apppermission type:', type);
     const permissions = REQUEST_PERMISSION_TYPE[type][Platform.OS];
-    console.log('apppermission checkpermission permission: ', permissions);
     if (!permissions) {
       return true;
     }

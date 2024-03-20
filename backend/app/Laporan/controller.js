@@ -8,6 +8,8 @@ const JenisPasien = require("../JenisPasien/model");
 const { Op, Sequelize } = require("sequelize");
 const moment = require("moment-timezone");
 
+const MAX_FILE_SIZE = 2 * 1024 * 1024;
+
 //@description     Get All Laporan User Latest Order
 //@route           GET /api/laporan?status=&month=&year=
 //@access          Public
@@ -65,17 +67,20 @@ const getAllLaporan = async (req, res) => {
       });
     }
 
-    const revLaporan = laporan.map((item) => ({
-      id_laporan: item.id_laporan,
-      nama_pasien: item.nama_pasien,
-      insiden: item.insiden,
-      waktu_mendapatkan_pelayanan: `${moment(item.waktu_mendapatkan_pelayanan).tz("Asia/Makassar")}`,
-      waktu_kejadian_insiden: `${moment(item.waktu_kejadian_insiden).tz("Asia/Makassar")}`,
-      status: item.status,
-      tanggal_laporan_dikirim: `${moment(item.tanggal_laporan_dikirim).tz("Asia/Makassar")}`,
-      tanggal_laporan_kedaluwarsa: `${moment(item.tanggal_laporan_kedaluwarsa).tz("Asia/Makassar")}`,
-      gambar: item.gambar,
-    }));
+    const revLaporan = laporan.map((item) => {
+      let dataUri = item.gambar ? `data:image/jpeg;base64,${item.gambar.toString("base64")}` : null;
+      return {
+        id_laporan: item.id_laporan,
+        nama_pasien: item.nama_pasien,
+        insiden: item.insiden,
+        waktu_mendapatkan_pelayanan: `${moment(item.waktu_mendapatkan_pelayanan).tz("Asia/Makassar")}`,
+        waktu_kejadian_insiden: `${moment(item.waktu_kejadian_insiden).tz("Asia/Makassar")}`,
+        status: item.status,
+        tanggal_laporan_dikirim: `${moment(item.tanggal_laporan_dikirim).tz("Asia/Makassar")}`,
+        tanggal_laporan_kedaluwarsa: `${moment(item.tanggal_laporan_kedaluwarsa).tz("Asia/Makassar")}`,
+        gambar: dataUri,
+      };
+    });
 
     res.status(200).json({
       code: "200",
@@ -99,7 +104,7 @@ const getLaporanByIdLaporan = async (req, res) => {
   try {
     const id_laporan = req.params.id_laporan;
     const status = req.query.status;
-    console.log("status: ", status);
+
     if (status === "dalam antrian" || status === "investigasi" || status === "laporan kedaluwarsa") {
       const laporan = await Laporan.findOne({
         where: {
@@ -150,6 +155,7 @@ const getLaporanByIdLaporan = async (req, res) => {
           },
         ],
       });
+      let dataUri = laporan.gambar ? `data:image/jpeg;base64,${laporan.gambar.toString("base64")}` : null;
 
       const revLaporan = {
         id_laporan: laporan.id_laporan,
@@ -177,7 +183,7 @@ const getLaporanByIdLaporan = async (req, res) => {
         status: laporan.status,
         tanggal_laporan_dikirim: `${moment(laporan.tanggal_laporan_dikirim).tz("Asia/Makassar")}`,
         tanggal_laporan_kedaluwarsa: `${moment(laporan.tanggal_laporan_kedaluwarsa).tz("Asia/Makassar")}`,
-        gambar: laporan.gambar,
+        gambar: dataUri,
 
         pelapor_id_user: laporan.pelapor ? laporan.pelapor.id_user : null,
         pelapor_username: laporan.pelapor ? laporan.pelapor.username : null,
@@ -258,8 +264,7 @@ const getLaporanByIdLaporan = async (req, res) => {
           },
         ],
       });
-
-      console.log("ini loh laporan selesai: ", laporan.laporan.id_laporan);
+      let dataUri = laporan.laporan.gambar ? `data:image/jpeg;base64,${laporan.laporan.gambar.toString("base64")}` : null;
 
       const revLaporan = {
         id_laporan: laporan.laporan.id_laporan,
@@ -287,7 +292,7 @@ const getLaporanByIdLaporan = async (req, res) => {
         status: laporan.laporan.status,
         tanggal_laporan_dikirim: `${moment(laporan.laporan.tanggal_laporan_dikirim).tz("Asia/Makassar")}`,
         tanggal_laporan_kedaluwarsa: `${moment(laporan.laporan.tanggal_laporan_kedaluwarsa).tz("Asia/Makassar")}`,
-        gambar: laporan.laporan.gambar,
+        gambar: dataUri,
 
         pelapor_id_user: laporan.laporan.pelapor ? laporan.laporan.pelapor.id_user : null,
         pelapor_username: laporan.laporan.pelapor ? laporan.laporan.pelapor.username : null,
@@ -335,7 +340,6 @@ const getLaporanByIdLaporan = async (req, res) => {
 const getLaporanByUserId = async (req, res) => {
   try {
     const id_user = req.params.id_user;
-    console.log("ini id user: ", id_user);
 
     const laporan = await Laporan.findAll({
       attributes: ["id_laporan", "status", "tanggal_laporan_dikirim", "gambar"],
@@ -345,12 +349,15 @@ const getLaporanByUserId = async (req, res) => {
       order: [["tanggal_laporan_dikirim", "DESC"]],
     });
 
-    const revLaporan = laporan.map((item) => ({
-      id_laporan: item.id_laporan,
-      status: item.status,
-      tanggal_laporan_dikirim: `${moment(item.tanggal_laporan_dikirim).tz("Asia/Makassar")}`,
-      gambar: item.gambar,
-    }));
+    const revLaporan = laporan.map((item) => {
+      let dataUri = item.gambar ? `data:image/jpeg;base64,${item.gambar.toString("base64")}` : null;
+      return {
+        id_laporan: item.id_laporan,
+        status: item.status,
+        tanggal_laporan_dikirim: `${moment(item.tanggal_laporan_dikirim).tz("Asia/Makassar")}`,
+        gambar: dataUri,
+      };
+    });
 
     res.status(200).json({
       code: "200",
@@ -383,12 +390,16 @@ const getLatestThreeLaporanByUserId = async (req, res) => {
       limit: 3,
     });
 
-    const revLaporan = laporan.map((item) => ({
-      id_laporan: item.id_laporan,
-      status: item.status,
-      tanggal_laporan_dikirim: `${moment(item.tanggal_laporan_dikirim).tz("Asia/Makassar")}`,
-      gambar: item.gambar,
-    }));
+    const revLaporan = laporan.map((item) => {
+      let dataUri = item.gambar ? `data:image/jpeg;base64,${item.gambar.toString("base64")}` : null;
+
+      return {
+        id_laporan: item.id_laporan,
+        status: item.status,
+        tanggal_laporan_dikirim: `${moment(item.tanggal_laporan_dikirim).tz("Asia/Makassar")}`,
+        gambar: dataUri,
+      };
+    });
 
     res.status(200).json({
       code: "200",
@@ -412,9 +423,6 @@ const getLaporanToday = async (req, res) => {
   const TODAY_START = moment.tz("Asia/Makassar").startOf("day");
   const NOW = moment.tz("Asia/Makassar");
 
-  console.log("ini now: ", NOW);
-  console.log("ini today start: ", TODAY_START);
-
   try {
     const laporan = await Laporan.findAll({
       where: {
@@ -427,12 +435,15 @@ const getLaporanToday = async (req, res) => {
       limit: 10,
     });
 
-    const revLaporan = laporan.map((item) => ({
-      id_laporan: item.id_laporan,
-      status: item.status,
-      tanggal_laporan_dikirim: `${moment(item.tanggal_laporan_dikirim).tz("Asia/Makassar")}`,
-      gambar: item.gambar,
-    }));
+    const revLaporan = laporan.map((item) => {
+      let dataUri = item.gambar ? `data:image/jpeg;base64,${item.gambar.toString("base64")}` : null;
+      return {
+        id_laporan: item.id_laporan,
+        status: item.status,
+        tanggal_laporan_dikirim: `${moment(item.tanggal_laporan_dikirim).tz("Asia/Makassar")}`,
+        gambar: dataUri,
+      };
+    });
 
     res.status(200).json({
       code: "200",
@@ -472,12 +483,16 @@ const getLaporanCurrentMonth = async (req, res) => {
       limit: 10,
     });
 
-    const revLaporan = laporan.map((item) => ({
-      id_laporan: item.id_laporan,
-      status: item.status,
-      tanggal_laporan_dikirim: `${moment(item.tanggal_laporan_dikirim).tz("Asia/Makassar")}`,
-      gambar: item.gambar,
-    }));
+    const revLaporan = laporan.map((item) => {
+      let dataUri = item.gambar ? `data:image/jpeg;base64,${item.gambar.toString("base64")}` : null;
+
+      return {
+        id_laporan: item.id_laporan,
+        status: item.status,
+        tanggal_laporan_dikirim: `${moment(item.tanggal_laporan_dikirim).tz("Asia/Makassar")}`,
+        gambar: dataUri,
+      };
+    });
 
     res.status(200).json({
       code: "200",
@@ -556,12 +571,6 @@ const getLaporanAmount = async (req, res) => {
 
       const amountAllLaporan = amountLaporanDalamAntrian + amountLaporanInvestigasi + amountLaporanSelesai + amountLaporanKedaluwarsa;
 
-      console.log("jumlah laporan dalam antrian: ", amountLaporanDalamAntrian);
-      console.log("jumlah laporan investigasi: ", amountLaporanInvestigasi);
-      console.log("jumlah laporan laporan selesai: ", amountLaporanSelesai);
-      console.log("jumlah laporan laporan kedaluwarsa: ", amountLaporanKedaluwarsa);
-      console.log("jumlah laporan semua: ", amountAllLaporan);
-
       res.status(200).json({
         code: "200",
         status: "OK",
@@ -613,38 +622,6 @@ const postLaporanByUser = async (req, res) => {
       errors: "user id not found",
     });
 
-  let url_gambar = null;
-
-  if (req.file) {
-    const fileName = req.file.originalname;
-    const fileSize = req.file.size;
-    const ext = path.extname(req.file.originalname);
-
-    url_gambar = `https://${req.get("host")}/images/${fileName}`;
-    const allowedType = [".png", ".jpeg", ".jpg"];
-
-    if (!allowedType.includes(ext.toLowerCase())) {
-      fs.unlinkSync(path.join(__dirname, "..", "..", "public/images", req.file.filename));
-      return res.status(400).json({
-        code: "400",
-        status: "BAD_REQUEST",
-        errors: "Invalid Images. Image should be .png .jpg .jpeg",
-      });
-    }
-
-    if (fileSize > 2097152) {
-      fs.unlinkSync(path.join(__dirname, "..", "..", "public/images", req.file.filename));
-      return res.status(400).json({
-        code: "400",
-        status: "BAD_REQUEST",
-        errors: "Image must less than 2MB",
-      });
-    }
-
-    const target = path.join(__dirname, "..", "..", "public/images", fileName);
-    fs.renameSync(req.file.path, target);
-  }
-
   const id_user = req.params.id_user;
   const {
     nama_pasien,
@@ -667,9 +644,16 @@ const postLaporanByUser = async (req, res) => {
     tindak_lanjut_setelah_kejadian_dan_hasil,
     yang_melakukan_tindak_lanjut_setelah_insiden,
     kejadian_sama_pernah_terjadi_di_unit_lain,
+    gambar,
   } = req.body;
 
-  console.log("ini adalah waktu kejadian insiden: ", waktu_kejadian_insiden);
+  if (gambar?.length > MAX_FILE_SIZE) {
+    return res.status(400).json({
+      code: "400",
+      status: "BAD_REQUEST",
+      errors: "Image must less than 2MB",
+    });
+  }
 
   if (
     (id_user,
@@ -695,6 +679,13 @@ const postLaporanByUser = async (req, res) => {
     kejadian_sama_pernah_terjadi_di_unit_lain)
   ) {
     try {
+      let base64 = null;
+      let buffer = null;
+      if (gambar) {
+        base64 = gambar;
+        buffer = Buffer.from(base64, "base64");
+      }
+
       const laporan = await Laporan.create({
         id_user,
         nama_pasien,
@@ -719,13 +710,13 @@ const postLaporanByUser = async (req, res) => {
         kejadian_sama_pernah_terjadi_di_unit_lain,
         tanggal_laporan_dikirim,
         tanggal_laporan_kedaluwarsa,
-        gambar: url_gambar,
+        gambar: buffer,
       });
 
       res.status(201).json({
         code: "201",
         status: "CREATED",
-        data: laporan,
+        data: true,
       });
     } catch (error) {
       console.log(error);
@@ -748,41 +739,8 @@ const postLaporanByUser = async (req, res) => {
 //@route           POST /api/laporan
 //@access          Public
 const postLaporanByAnonim = async (req, res) => {
-  let url_gambar = null;
-
   const tanggal_laporan_dikirim = moment.tz("Asia/Makassar");
   const tanggal_laporan_kedaluwarsa = tanggal_laporan_dikirim.clone().add(48, "hours");
-
-  if (req.file) {
-    const fileName = req.file.originalname;
-    const fileSize = req.file.size;
-    const ext = path.extname(req.file.originalname);
-
-    url_gambar = `https://${req.get("host")}/images/${fileName}`;
-    console.log("url gambar: ", url_gambar);
-    const allowedType = [".png", ".jpeg", ".jpg"];
-
-    if (!allowedType.includes(ext.toLowerCase())) {
-      fs.unlinkSync(path.join(__dirname, "..", "..", "public/images", req.file.filename));
-      return res.status(400).json({
-        code: "400",
-        status: "BAD_REQUEST",
-        errors: "Invalid Images. Image should be .png .jpg .jpeg",
-      });
-    }
-
-    if (fileSize > 2097152) {
-      fs.unlinkSync(path.join(__dirname, "..", "..", "public/images", req.file.filename));
-      return res.status(400).json({
-        code: "400",
-        status: "BAD_REQUEST",
-        errors: "Image must less than 2MB",
-      });
-    }
-
-    const target = path.join(__dirname, "..", "..", "public/images", fileName);
-    fs.renameSync(req.file.path, target);
-  }
 
   const {
     nama_pasien,
@@ -805,7 +763,16 @@ const postLaporanByAnonim = async (req, res) => {
     tindak_lanjut_setelah_kejadian_dan_hasil,
     yang_melakukan_tindak_lanjut_setelah_insiden,
     kejadian_sama_pernah_terjadi_di_unit_lain,
+    gambar,
   } = req.body;
+
+  if (gambar?.length > MAX_FILE_SIZE) {
+    return res.status(400).json({
+      code: "400",
+      status: "BAD_REQUEST",
+      errors: "Image must less than 2MB",
+    });
+  }
 
   if (
     (nama_pasien,
@@ -830,6 +797,12 @@ const postLaporanByAnonim = async (req, res) => {
     kejadian_sama_pernah_terjadi_di_unit_lain)
   ) {
     try {
+      let base64 = null;
+      let buffer = null;
+      if (gambar) {
+        base64 = gambar;
+        buffer = Buffer.from(base64, "base64");
+      }
       const laporan = await Laporan.create({
         nama_pasien,
         no_rekam_medis,
@@ -853,13 +826,13 @@ const postLaporanByAnonim = async (req, res) => {
         kejadian_sama_pernah_terjadi_di_unit_lain,
         tanggal_laporan_dikirim,
         tanggal_laporan_kedaluwarsa,
-        gambar: url_gambar,
+        gambar: buffer,
       });
 
       res.status(201).json({
         code: "201",
         status: "CREATED",
-        data: laporan,
+        data: true,
       });
     } catch (error) {
       console.log(error);
@@ -885,8 +858,6 @@ const updateStatusLaporanInvestigasi = async (req, res) => {
   const id_laporan = req.params.id_laporan;
   const id_user = req.id_user;
   const diinvestigasi_oleh = req.body.diinvestigasi_oleh;
-
-  console.log("ini id_user: ", id_user);
 
   if (!diinvestigasi_oleh) {
     return res.status(400).json({
@@ -937,8 +908,6 @@ const updateStatusLaporanInvestigasi = async (req, res) => {
     );
 
     await t.commit();
-
-    console.log("ini hasil update: ", laporan[0]);
 
     res.status(200).json({
       code: "200",

@@ -5,6 +5,8 @@ import {
   Text,
   TouchableOpacity,
   View,
+  Alert,
+  ActivityIndicator,
 } from 'react-native';
 import React, {useCallback, useEffect, useState} from 'react';
 import {useFocusEffect} from '@react-navigation/native';
@@ -55,6 +57,7 @@ const AdminHomepage = ({navigation, route}: any) => {
   const today = new Date();
   const [laporanHariIni, setLaporanHariIni] = useState<Laporan[]>([]);
   const [laporanBulanIni, setLaporanBulanIni] = useState<Laporan[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -66,30 +69,37 @@ const AdminHomepage = ({navigation, route}: any) => {
   useEffect(() => {
     socket.off('admin received');
     socket.emit('join admin', 'admin');
-    socket.on('admin received', (data: any) => {
+    socket.on('admin received', () => {
       getTodayReports();
-      console.log('halo sssssss');
-      PushNotification.localNotification({
-        channelId: `${channel_ids}`,
-        title: data.title,
-        message: data.message,
-      });
     });
-    console.log('ini channel idlkl: ', channel_ids);
   }, []);
 
   const getTodayReports = async () => {
+    setIsLoading(true);
     try {
       const headers = {
-        Authorization: `Bearer ${dataUser.token}`, // Tambahkan token ke header dengan format Bearer
+        Authorization: `Bearer ${dataUser.token}`,
       };
 
       const response = await axios.get(`${API_HOST}/api/laporan/current/day`, {
         headers,
       });
+      setIsLoading(false);
       setLaporanHariIni(response.data.data);
-      console.log('laporan hari ini: ', response.data);
     } catch (error) {
+      setIsLoading(false);
+      Alert.alert(
+        'Terjadi kesalahan saat memuat data',
+        'Pastikan anda telah terhubung ke internet lalu coba lagi atau restart aplikasi',
+        [
+          {
+            text: 'Coba Lagi',
+            onPress: () => {
+              getTodayReports();
+            },
+          },
+        ],
+      );
       console.log(error);
     }
   };
@@ -97,7 +107,7 @@ const AdminHomepage = ({navigation, route}: any) => {
   const getCurrentMonthReports = async () => {
     try {
       const headers = {
-        Authorization: `Bearer ${dataUser.token}`, // Tambahkan token ke header dengan format Bearer
+        Authorization: `Bearer ${dataUser.token}`,
       };
 
       const response = await axios.get(
@@ -105,7 +115,6 @@ const AdminHomepage = ({navigation, route}: any) => {
         {headers},
       );
       setLaporanBulanIni(response.data.data);
-      console.log('laporan bulan ini: ', response.data.data);
     } catch (error) {
       console.log(error);
     }
@@ -218,29 +227,23 @@ const AdminHomepage = ({navigation, route}: any) => {
 
   const todayReport = () => {
     return (
-      <View>
-        {laporanHariIni.length === 0 ? (
-          <View style={styles.card}>
-            <Text style={styles.txtCardTitle}>
-              Laporan{' '}
-              <Text style={{fontFamily: 'Poppins-Bold'}}>
-                hari ini ({formatDate2(today)})
-              </Text>
+      <View style={styles.card}>
+        <Text style={styles.txtCardTitle}>
+          Laporan{' '}
+          <Text style={{fontFamily: 'Poppins-Bold'}}>
+            hari ini ({formatDate2(today)})
+          </Text>
+        </Text>
+        {isLoading ? (
+          <ActivityIndicator size="large" color={MyColor.Primary} />
+        ) : laporanHariIni.length === 0 ? (
+          <View style={styles.cardNoReport}>
+            <Text style={styles.txtTodayReport}>
+              Tidak ada laporan hari ini 👏
             </Text>
-            <View style={styles.cardNoReport}>
-              <Text style={styles.txtTodayReport}>
-                Tidak ada laporan hari ini 👏
-              </Text>
-            </View>
           </View>
         ) : (
-          <View style={styles.card}>
-            <Text style={styles.txtCardTitle}>
-              Laporan{' '}
-              <Text style={{fontFamily: 'Poppins-Bold'}}>
-                hari ini ({formatDate2(today)})
-              </Text>
-            </Text>
+          <View>
             {laporanHariIni.map((item, index) => (
               <TouchableOpacity
                 style={[
@@ -252,7 +255,6 @@ const AdminHomepage = ({navigation, route}: any) => {
                 key={index}
                 onPress={() =>
                   navigation.navigate('AdminHistoryDetail', {
-                    dataUser: dataUser,
                     id_laporan: item.id_laporan,
                     status: item.status,
                   })
@@ -263,7 +265,7 @@ const AdminHomepage = ({navigation, route}: any) => {
                     style={styles.cardImage}
                   />
                   <View style={{width: 150}}>
-                    <Text style={styles.txtCardTime}>
+                    <Text style={[styles.txtCard, {fontSize: 14}]}>
                       {formatHour(new Date(item.tanggal_laporan_dikirim))}
                     </Text>
                     <Text style={styles.txtCard}>
@@ -277,6 +279,21 @@ const AdminHomepage = ({navigation, route}: any) => {
                 {getStatusIcon(item.status)}
               </TouchableOpacity>
             ))}
+            {laporanHariIni.length >= 10 && (
+              <View>
+                <Text
+                  style={{
+                    fontFamily: MyFont.Primary,
+                    fontSize: 14,
+                    color: 'black',
+                    textAlign: 'center',
+                    padding: 10,
+                  }}>
+                  Laporan hari ini telah melebihi 10 laporan. Untuk daftar lebih
+                  lengkap, silahkan buka menu daftar semua laporan.
+                </Text>
+              </View>
+            )}
           </View>
         )}
       </View>
@@ -330,7 +347,7 @@ const AdminHomepage = ({navigation, route}: any) => {
                     style={styles.cardImage}
                   />
                   <View style={{width: 150}}>
-                    <Text style={styles.txtCardTime}>
+                    <Text style={[styles.txtCard, {fontSize: 14}]}>
                       {formatHour(new Date(item.tanggal_laporan_dikirim))}
                     </Text>
                     <Text style={styles.txtCard}>
@@ -391,13 +408,7 @@ const AdminHomepage = ({navigation, route}: any) => {
       </View>
       <TouchableOpacity
         style={styles.btnReportList}
-        onPress={() =>
-          navigation.navigate(
-            'AdminHistoryItems',
-            dataUser,
-            console.log('Ini dataUser di homepage Admin: ', dataUser),
-          )
-        }>
+        onPress={() => navigation.navigate('AdminHistoryItems', dataUser)}>
         <Text style={styles.txtCardStatus}>Daftar Semua Laporan</Text>
         <Image
           source={IconRiwayat}
@@ -459,8 +470,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   txtTodayReport: {
-    padding: 20,
     fontFamily: 'Poppins-Medium',
+    padding: 20,
     fontSize: 18,
     color: '#fff',
   },
@@ -472,19 +483,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   txtCard: {
+    fontFamily: MyFont.Primary,
     fontSize: 11,
     color: 'white',
-    fontFamily: MyFont.Primary,
-  },
-  txtCardTime: {
-    fontSize: 14,
-    color: 'white',
-    fontFamily: MyFont.Primary,
   },
   txtCardStatus: {
+    fontFamily: 'Poppins-Bold',
     fontSize: 16,
     color: 'white',
-    fontFamily: 'Poppins-Bold',
   },
   txtWelcome: {
     fontFamily: 'Poppins-Medium',

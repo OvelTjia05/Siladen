@@ -31,7 +31,7 @@ const WelcomePage = ({navigation}: any) => {
           colors={['rgba(255, 255, 255, 0.62)', '#efefef']}
           style={styles.overlay}></LinearGradient>
         <View style={styles.content}>
-          <Gap height={110} />
+          <Gap height={100} />
           <View style={styles.logoContainer}>
             <Image source={Logo} resizeMode="contain" style={styles.logo} />
             <Text style={styles.txt}>RSUD Dr.Sam Ratulangi{'\n'}Tondano</Text>
@@ -127,10 +127,11 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   logo: {
-    width: 33,
+    width: 43,
     height: 43,
   },
   logoContainer: {
+    alignItems: 'center',
     flexDirection: 'row',
     columnGap: 20,
   },

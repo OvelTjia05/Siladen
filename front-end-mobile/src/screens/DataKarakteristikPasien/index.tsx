@@ -123,8 +123,6 @@ const DataKarakteristikPasien = ({navigation, route}: any) => {
   const btnUmur = () => {
     const handleAge = (option: string) => {
       setSelectedAgeType(option);
-
-      console.log(age);
     };
 
     return (

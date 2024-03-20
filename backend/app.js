@@ -6,7 +6,7 @@ var logger = require("morgan");
 const cors = require("cors");
 
 var laporan = require("./app/Laporan/router");
-var user = require("./app/user/router");
+var user = require("./app/User/router");
 var authUser = require("./app/AuthUser/router");
 var jenisPasien = require("./app/JenisPasien/router");
 

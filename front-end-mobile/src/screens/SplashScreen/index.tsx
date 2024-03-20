@@ -15,108 +15,136 @@ import {MyFont} from '../../components/atoms/MyFont';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {useDispatch} from 'react-redux';
 import {
-  saveChannelIdAction,
   saveIdUserAction,
   saveNameAction,
   saveRoleAction,
   saveTokenAction,
 } from '../../../redux/action';
-import {API_HOST} from '../../../config';
+import {API_HOST, API_HOST_FCM} from '../../../config';
 import axios from 'axios';
-import PushNotification from 'react-native-push-notification';
+import PushNotification, {Importance} from 'react-native-push-notification';
 import {defineSocket, socket} from '../../../socket';
 
 const SplashScreen = ({navigation}: any) => {
-  const timestamp = Date.now();
   const dispatch = useDispatch();
   useEffect(() => {
-    cekAuth();
+    // cekAuth();
+    getFCMKey();
   }, [navigation]);
 
-  PushNotification.getChannels(function (channel_ids) {
-    console.log(channel_ids);
-    console.log('ini timestamp', timestamp);
+  // useEffect(() => {
+  //   getFCMKey();
+  // }, []);
 
+  PushNotification.getChannels(function (channel_ids) {
     if (channel_ids.length < 1) {
       PushNotification.createChannel(
         {
-          channelId: `${timestamp}`,
-          channelName: 'myChannel',
+          channelId: `siladen-channel-rsud`,
+          channelName: 'Report Notification',
+          importance: Importance.HIGH,
+          vibrate: true,
         },
-        created => {},
+        created => {
+          console.log(created);
+        },
       );
-      (async () => {
-        console.log('ini e timestamp: ', timestamp.toString());
-        const timestampString = timestamp.toString();
-        await AsyncStorage.setItem('channel_id', timestampString);
-      })();
     }
-    (async () => {
-      console.log('masuk dalam');
-      const item = await AsyncStorage.getItem('channel_id');
-      dispatch(saveChannelIdAction(item));
-      console.log('ini channel id: ', item);
-    })();
-
-    console.log('ini channel id notif: ', channel_ids);
   });
+
+  const getFCMKey = async () => {
+    const FCMKey: any = await AsyncStorage.getItem('fcm_key');
+    // console.log('ini key so ada', FCMKey);
+    if (!FCMKey) {
+      try {
+        const response = await axios.get(`${API_HOST_FCM}/fcm/key`);
+        // console.log('ini key FCM', response);
+        if (response.data.key) {
+          await AsyncStorage.setItem('fcm_key', response.data.key);
+          cekAuth();
+        }
+      } catch (error: any) {
+        console.log('error fcm key', error);
+        if (error.code === 'ERR_NETWORK') {
+          Alert.alert(
+            'Kesalahan jaringan',
+            'Pastikan anda telah terhubung ke internet lalu restart aplikasi',
+            [
+              {
+                text: 'Restart',
+                onPress: () => BackHandler.exitApp(),
+              },
+            ],
+          );
+        } else {
+          Alert.alert(
+            'Terjadi Kesalahan',
+            'Silahkan restart kembali aplikasi, jika kesalahan terus berlanjut hubungi IT support',
+            [
+              {
+                text: 'Restart',
+                onPress: () => BackHandler.exitApp(),
+              },
+            ],
+          );
+        }
+      }
+    } else {
+      cekAuth();
+    }
+  };
 
   const cekAuth = async () => {
     try {
-      const nameAsync: any = await AsyncStorage.getItem('name');
-      const idUserAsync: any = await AsyncStorage.getItem('id_user');
-      const roleAsync: any = await AsyncStorage.getItem('role');
-      const tokenAsync: any = await AsyncStorage.getItem('token');
+      const name: any = await AsyncStorage.getItem('name');
+      const idUser: any = await AsyncStorage.getItem('id_user');
+      const role: any = await AsyncStorage.getItem('role');
+      const token: any = await AsyncStorage.getItem('token');
 
-      if (nameAsync && idUserAsync && roleAsync && tokenAsync) {
-        dispatch(saveNameAction(nameAsync));
-        dispatch(saveIdUserAction(idUserAsync));
-        dispatch(saveRoleAction(roleAsync));
-        dispatch(saveTokenAction(tokenAsync));
+      if (name && idUser && role && token) {
+        dispatch(saveNameAction(name));
+        dispatch(saveIdUserAction(idUser));
+        dispatch(saveRoleAction(role));
+        dispatch(saveTokenAction(token));
         const headers = {
-          Authorization: `Bearer ${tokenAsync}`,
+          Authorization: `Bearer ${token}`,
         };
 
-        if (roleAsync === 'user') {
+        if (role === 'user') {
           try {
             const response = await axios.get(`${API_HOST}/auth/user/session/`, {
               headers,
             });
 
             if (response.data.code === '200') {
-              console.log('ini respons splashscreen', response);
               navigation.replace('Navigation');
               if (!socket) {
                 defineSocket();
               }
             }
           } catch (error: any) {
-            console.log('ini response error: ', error.code);
             if (error.code === 'ERR_NETWORK') {
-              console.log('ini error splashscreen', error);
               Alert.alert(
                 'Kesalahan jaringan',
                 'Pastikan anda telah terhubung ke internet lalu restart aplikasi',
                 [
                   {
                     text: 'Restart',
-                    onPress: () => BackHandler.exitApp(), // Memanggil fungsi keluarAplikasi saat tombol OK diklik
+                    onPress: () => BackHandler.exitApp(),
                   },
                 ],
               );
             } else {
-              console.log('ini token expire');
               navigation.replace('WelcomePage');
             }
           }
-        } else if (roleAsync === 'admin') {
+        } else if (role === 'admin') {
           try {
             const response = await axios.get(`${API_HOST}/auth/user/session/`, {
               headers,
             });
 
             if (response.data.code === '200') {
-              console.log('ini respons splashscreen', response);
               navigation.replace('AdminHomepage');
               if (!socket) {
                 defineSocket();
@@ -124,26 +152,23 @@ const SplashScreen = ({navigation}: any) => {
             }
           } catch (error: any) {
             if (error.code === 'ERR_NETWORK') {
-              console.log('ini error splashscreen', error);
               Alert.alert(
                 'Kesalahan jaringan',
                 'Pastikan anda telah terhubung ke internet lalu restart aplikasi',
                 [
                   {
                     text: 'Restart',
-                    onPress: () => BackHandler.exitApp(), // Memanggil fungsi keluarAplikasi saat tombol OK diklik
+                    onPress: () => BackHandler.exitApp(),
                   },
                 ],
               );
             } else {
-              console.log('ini token expire');
               navigation.replace('WelcomePage');
             }
           }
         }
       } else {
         const navigateToDashboard = setTimeout(() => {
-          console.log('tidak ada token dan id');
           navigation.replace('WelcomePage');
         }, 3000);
         return () => clearTimeout(navigateToDashboard);

@@ -34,7 +34,6 @@ const CostumTab = ({children, onPress}: any) => (
 );
 
 const Navigation = ({navigation, route}: any) => {
-  console.log('in navigation::: ', route.params);
   const dataUser = route.params;
   return (
     <Tab.Navigator
