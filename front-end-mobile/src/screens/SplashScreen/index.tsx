@@ -15,63 +15,102 @@ import {MyFont} from '../../components/atoms/MyFont';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {useDispatch} from 'react-redux';
 import {
-  saveChannelIdAction,
   saveIdUserAction,
   saveNameAction,
   saveRoleAction,
   saveTokenAction,
 } from '../../../redux/action';
-import {API_HOST} from '../../../config';
+import {API_HOST, API_HOST_FCM} from '../../../config';
 import axios from 'axios';
-import PushNotification from 'react-native-push-notification';
+import PushNotification, {Importance} from 'react-native-push-notification';
 import {defineSocket, socket} from '../../../socket';
 
 const SplashScreen = ({navigation}: any) => {
-  const timestamp = Date.now();
   const dispatch = useDispatch();
   useEffect(() => {
-    cekAuth();
+    // cekAuth();
+    getFCMKey();
   }, [navigation]);
+
+  // useEffect(() => {
+  //   getFCMKey();
+  // }, []);
 
   PushNotification.getChannels(function (channel_ids) {
     if (channel_ids.length < 1) {
       PushNotification.createChannel(
         {
-          channelId: `${timestamp}`,
-          channelName: 'myChannel',
+          channelId: `siladen-channel-rsud`,
+          channelName: 'Report Notification',
+          importance: Importance.HIGH,
+          vibrate: true,
         },
         created => {
           console.log(created);
         },
       );
-      (async () => {
-        const timestampString = timestamp.toString();
-        await AsyncStorage.setItem('channel_id', timestampString);
-      })();
     }
-    (async () => {
-      const item = await AsyncStorage.getItem('channel_id');
-      dispatch(saveChannelIdAction(item));
-    })();
   });
+
+  const getFCMKey = async () => {
+    const FCMKey: any = await AsyncStorage.getItem('fcm_key');
+    // console.log('ini key so ada', FCMKey);
+    if (!FCMKey) {
+      try {
+        const response = await axios.get(`${API_HOST_FCM}/fcm/key`);
+        // console.log('ini key FCM', response);
+        if (response.data.key) {
+          await AsyncStorage.setItem('fcm_key', response.data.key);
+          cekAuth();
+        }
+      } catch (error: any) {
+        console.log('error fcm key', error);
+        if (error.code === 'ERR_NETWORK') {
+          Alert.alert(
+            'Kesalahan jaringan',
+            'Pastikan anda telah terhubung ke internet lalu restart aplikasi',
+            [
+              {
+                text: 'Restart',
+                onPress: () => BackHandler.exitApp(),
+              },
+            ],
+          );
+        } else {
+          Alert.alert(
+            'Terjadi Kesalahan',
+            'Silahkan restart kembali aplikasi, jika kesalahan terus berlanjut hubungi IT support',
+            [
+              {
+                text: 'Restart',
+                onPress: () => BackHandler.exitApp(),
+              },
+            ],
+          );
+        }
+      }
+    } else {
+      cekAuth();
+    }
+  };
 
   const cekAuth = async () => {
     try {
-      const nameAsync: any = await AsyncStorage.getItem('name');
-      const idUserAsync: any = await AsyncStorage.getItem('id_user');
-      const roleAsync: any = await AsyncStorage.getItem('role');
-      const tokenAsync: any = await AsyncStorage.getItem('token');
+      const name: any = await AsyncStorage.getItem('name');
+      const idUser: any = await AsyncStorage.getItem('id_user');
+      const role: any = await AsyncStorage.getItem('role');
+      const token: any = await AsyncStorage.getItem('token');
 
-      if (nameAsync && idUserAsync && roleAsync && tokenAsync) {
-        dispatch(saveNameAction(nameAsync));
-        dispatch(saveIdUserAction(idUserAsync));
-        dispatch(saveRoleAction(roleAsync));
-        dispatch(saveTokenAction(tokenAsync));
+      if (name && idUser && role && token) {
+        dispatch(saveNameAction(name));
+        dispatch(saveIdUserAction(idUser));
+        dispatch(saveRoleAction(role));
+        dispatch(saveTokenAction(token));
         const headers = {
-          Authorization: `Bearer ${tokenAsync}`,
+          Authorization: `Bearer ${token}`,
         };
 
-        if (roleAsync === 'user') {
+        if (role === 'user') {
           try {
             const response = await axios.get(`${API_HOST}/auth/user/session/`, {
               headers,
@@ -91,7 +130,7 @@ const SplashScreen = ({navigation}: any) => {
                 [
                   {
                     text: 'Restart',
-                    onPress: () => BackHandler.exitApp(), // Memanggil fungsi keluarAplikasi saat tombol OK diklik
+                    onPress: () => BackHandler.exitApp(),
                   },
                 ],
               );
@@ -99,7 +138,7 @@ const SplashScreen = ({navigation}: any) => {
               navigation.replace('WelcomePage');
             }
           }
-        } else if (roleAsync === 'admin') {
+        } else if (role === 'admin') {
           try {
             const response = await axios.get(`${API_HOST}/auth/user/session/`, {
               headers,
@@ -119,7 +158,7 @@ const SplashScreen = ({navigation}: any) => {
                 [
                   {
                     text: 'Restart',
-                    onPress: () => BackHandler.exitApp(), // Memanggil fungsi keluarAplikasi saat tombol OK diklik
+                    onPress: () => BackHandler.exitApp(),
                   },
                 ],
               );

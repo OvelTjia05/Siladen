@@ -9,7 +9,8 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
-import React, {useState, useEffect} from 'react';
+import React, {useState, useCallback} from 'react';
+import {CommonActions, useFocusEffect} from '@react-navigation/native';
 import {
   IconCentang,
   IconDropDown,
@@ -28,12 +29,13 @@ import Title from '../../components/atoms/Title';
 import {API_HOST} from '../../../config';
 import {useSelector} from 'react-redux';
 import {socket} from '../../../socket';
+import DetailLaporan from '../DetailLaporan';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const AdminHistoryDetail = ({navigation, route}: any) => {
-  const {id_laporan} = route.params;
+  const {id_laporan, status} = route.params;
   const idSelector = useSelector((data: any) => data.id_user);
   const nameSelector = useSelector((data: any) => data.name);
-
   const tokenSelector = useSelector((data: any) => data.token);
 
   const dataUser = {
@@ -42,7 +44,6 @@ const AdminHistoryDetail = ({navigation, route}: any) => {
     name: nameSelector,
   };
 
-  const [status, setStatus] = useState(route.params.status);
   const [laporanDetail, setLaporanDetail] = useState<any | null>(null);
   const [isExpanded, setIsExpanded] = useState(false);
   const [selectedJenisInsiden, setSelectedJenisInsiden] = useState(
@@ -50,6 +51,10 @@ const AdminHistoryDetail = ({navigation, route}: any) => {
   );
   const [selectedGrading, setSelectedGrading] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+
+  const headers = {
+    Authorization: `Bearer ${dataUser.token}`,
+  };
 
   const getLaporan = async () => {
     try {
@@ -66,35 +71,79 @@ const AdminHistoryDetail = ({navigation, route}: any) => {
     }
   };
 
-  const handleUpdateStatus = async (id_user: string) => {
+  const sendFCMNotification = async (to: string, body: string) => {
+    const FCMKey: any = await AsyncStorage.getItem('fcm_key');
+    const headersServerFCM = {
+      'Content-Type': 'application/JSON',
+      Authorization: `Bearer ${FCMKey}`,
+    };
+    try {
+      await axios.post(
+        'https://fcm.googleapis.com/fcm/send',
+        {
+          soundName: 'default',
+          priority: 'high',
+          notification: {
+            title: 'Respon dari petugas!',
+            body,
+          },
+          to,
+        },
+        {headers: headersServerFCM},
+      );
+    } catch (error) {
+      console.error('Error send notification:', error);
+    }
+  };
+
+  const handleInvestigasi = async (id_user: string) => {
     setIsLoading(true);
     try {
-      const headers = {
-        Authorization: `Bearer ${dataUser.token}`,
-      };
+      let responseReporter;
+
       const response = await axios.patch(
         `${API_HOST}/api/laporan/status/investigasi/${id_laporan}`,
         {diinvestigasi_oleh: dataUser.id_investigator},
         {headers},
       );
-      getLaporan();
-      const data = {
-        id_user,
-        title: 'Respon dari petugas!',
-        message: `laporan ini sedang diinvestigasi oleh ${dataUser.name}`,
-      };
-      socket.emit('new message', data);
-      navigation.navigate('AdminHistoryItems', {dataUser, status: null});
+      if (laporanDetail.id_user) {
+        responseReporter = await axios.get(
+          `${API_HOST}/api/user/${laporanDetail?.id_user}`,
+          {
+            headers,
+          },
+        );
+      }
+
       setIsLoading(false);
+      if (response.data.success === true) {
+        if (responseReporter) {
+          await sendFCMNotification(
+            responseReporter.data.data.device_token,
+            `laporan anda sedang diinvestigasi oleh ${dataUser.name}`,
+          );
+        }
+        const data = {id_user};
+        socket.emit('new message', data);
+        navigation.dispatch(
+          CommonActions.reset({
+            index: 0,
+            routes: [{name: 'AdminHistoryItems'}],
+          }),
+        );
+      }
     } catch (error) {
       setIsLoading(false);
       console.log(error);
     }
   };
 
-  useEffect(() => {
-    getLaporan();
-  }, [status]);
+  useFocusEffect(
+    useCallback(() => {
+      getLaporan();
+      // console.log('ini di detail', route.params);
+    }, []),
+  );
 
   const handleSelesai = async (id_user: string) => {
     setIsLoading(true);
@@ -103,9 +152,8 @@ const AdminHistoryDetail = ({navigation, route}: any) => {
       Alert.alert('Harap pilih jenis insiden dan grading');
     }
     try {
-      const headers = {
-        Authorization: `Bearer ${dataUser.token}`,
-      };
+      let responseReporter;
+
       const response = await axios.patch(
         `${API_HOST}/api/laporan/status/selesai/${id_laporan}`,
         {
@@ -114,16 +162,33 @@ const AdminHistoryDetail = ({navigation, route}: any) => {
         },
         {headers},
       );
-      if (response.data.success === true) {
-        const data = {
-          id_user,
-          message: 'laporan anda telah selesai ditindak',
-        };
-        socket.emit('new message', data);
-        setStatus('laporan selesai');
+
+      if (laporanDetail.id_user) {
+        responseReporter = await axios.get(
+          `${API_HOST}/api/user/${laporanDetail?.id_user}`,
+          {
+            headers,
+          },
+        );
       }
-      navigation.navigate('AdminHistoryItems', {dataUser, status: null});
+
       setIsLoading(false);
+      if (response.data.success === true) {
+        if (responseReporter) {
+          await sendFCMNotification(
+            responseReporter.data.data.device_token,
+            `laporan anda telah selesai ditindak`,
+          );
+        }
+        const data = {id_user};
+        socket.emit('new message', data);
+        navigation.dispatch(
+          CommonActions.reset({
+            index: 0,
+            routes: [{name: 'AdminHistoryItems'}],
+          }),
+        );
+      }
     } catch (error) {
       setIsLoading(false);
       console.log(error);
@@ -443,7 +508,7 @@ const AdminHistoryDetail = ({navigation, route}: any) => {
         ) : (
           <TouchableOpacity
             style={styles.statusLaporan2}
-            onPress={() => handleUpdateStatus(laporanDetail?.id_user)}>
+            onPress={() => handleInvestigasi(laporanDetail?.id_user)}>
             <Text style={styles.txtCardStatus}>Investigasi</Text>
             <View>{getStatusIcon('investigasi')}</View>
           </TouchableOpacity>

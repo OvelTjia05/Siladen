@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {
   StyleSheet,
   Text,
@@ -77,11 +77,10 @@ const Login = ({navigation}: any) => {
       return;
     }
     setIsLoading(true);
-
     try {
       const response = await axios.post(`${API_HOST}/auth/user/login`, {
-        username,
-        password,
+        username: username.trim(),
+        password: password.trim(),
       });
       const token = response.data.data.token;
       const id_user = response.data.data.id_user;
@@ -95,9 +94,14 @@ const Login = ({navigation}: any) => {
       await AsyncStorage.setItem('role', role);
       await AsyncStorage.setItem('job', job);
 
+      // console.log('ini login', response);
       if (response.data.code == '200') {
         const dataUser = response.data.data;
         if (dataUser.role !== 'admin') {
+          const deviceToken: any = await AsyncStorage.getItem('device_token');
+          await axios.patch(`${API_HOST}/api/user/device-token/${id_user}`, {
+            device_token: deviceToken,
+          });
           dispatch(saveIdUserAction(dataUser.id_user));
           dispatch(saveNameAction(dataUser.name));
           dispatch(saveRoleAction(dataUser.role));
@@ -115,6 +119,19 @@ const Login = ({navigation}: any) => {
           setUsername('');
           setPassword('');
         } else {
+          const headers = {
+            Authorization: `Bearer ${token}`,
+          };
+          await axios.delete(`${API_HOST}/auth/user/logout`, {
+            headers,
+          });
+
+          await AsyncStorage.setItem('id_user', '');
+          await AsyncStorage.setItem('name', '');
+          await AsyncStorage.setItem('token', '');
+          await AsyncStorage.setItem('role', '');
+          await AsyncStorage.setItem('job', '');
+
           Alert.alert('Peringatan', 'Gunakan akun lainnya!');
         }
       }

@@ -1,5 +1,5 @@
-import {StyleSheet, PermissionsAndroid, Platform} from 'react-native';
-import React, {useEffect} from 'react';
+import {StyleSheet, PermissionsAndroid, Platform, Alert} from 'react-native';
+import React, {useState, useEffect} from 'react';
 import {NavigationContainer} from '@react-navigation/native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import SplashScreen from './src/screens/SplashScreen';

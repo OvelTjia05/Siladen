@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "238477251918",
+    "project_id": "siladen",
+    "storage_bucket": "siladen.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:238477251918:android:8c1451d2fea0ce5f117a1f",
+        "android_client_info": {
+          "package_name": "com.apkpelaporaninsidenrsudsamrat"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAoIcPkBoIdYEuqiy237yszm8y8JZ8Zhfs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

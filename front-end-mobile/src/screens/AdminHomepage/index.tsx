@@ -69,13 +69,8 @@ const AdminHomepage = ({navigation, route}: any) => {
   useEffect(() => {
     socket.off('admin received');
     socket.emit('join admin', 'admin');
-    socket.on('admin received', (data: any) => {
+    socket.on('admin received', () => {
       getTodayReports();
-      PushNotification.localNotification({
-        channelId: `${channel_ids}`,
-        title: data.title,
-        message: data.message,
-      });
     });
   }, []);
 
@@ -260,7 +255,6 @@ const AdminHomepage = ({navigation, route}: any) => {
                 key={index}
                 onPress={() =>
                   navigation.navigate('AdminHistoryDetail', {
-                    dataUser: dataUser,
                     id_laporan: item.id_laporan,
                     status: item.status,
                   })
@@ -271,7 +265,7 @@ const AdminHomepage = ({navigation, route}: any) => {
                     style={styles.cardImage}
                   />
                   <View style={{width: 150}}>
-                    <Text style={styles.txtCardTime}>
+                    <Text style={[styles.txtCard, {fontSize: 14}]}>
                       {formatHour(new Date(item.tanggal_laporan_dikirim))}
                     </Text>
                     <Text style={styles.txtCard}>
@@ -353,7 +347,7 @@ const AdminHomepage = ({navigation, route}: any) => {
                     style={styles.cardImage}
                   />
                   <View style={{width: 150}}>
-                    <Text style={styles.txtCardTime}>
+                    <Text style={[styles.txtCard, {fontSize: 14}]}>
                       {formatHour(new Date(item.tanggal_laporan_dikirim))}
                     </Text>
                     <Text style={styles.txtCard}>
@@ -476,8 +470,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   txtTodayReport: {
-    padding: 20,
     fontFamily: 'Poppins-Medium',
+    padding: 20,
     fontSize: 18,
     color: '#fff',
   },
@@ -489,19 +483,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   txtCard: {
+    fontFamily: MyFont.Primary,
     fontSize: 11,
     color: 'white',
-    fontFamily: MyFont.Primary,
-  },
-  txtCardTime: {
-    fontSize: 14,
-    color: 'white',
-    fontFamily: MyFont.Primary,
   },
   txtCardStatus: {
+    fontFamily: 'Poppins-Bold',
     fontSize: 16,
     color: 'white',
-    fontFamily: 'Poppins-Bold',
   },
   txtWelcome: {
     fontFamily: 'Poppins-Medium',

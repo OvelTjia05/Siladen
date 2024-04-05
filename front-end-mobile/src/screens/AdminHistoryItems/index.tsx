@@ -9,7 +9,7 @@ import {
   BackHandler,
   ActivityIndicator,
 } from 'react-native';
-import React, {useState, useCallback} from 'react';
+import React, {useState, useCallback, useEffect} from 'react';
 import {CommonActions, useFocusEffect} from '@react-navigation/native';
 import Header from '../../components/molecules/Header';
 import {MyColor} from '../../components/atoms/MyColor';
@@ -50,7 +50,6 @@ const AdminHistoryItems = ({navigation, route}: any) => {
     null,
   );
   const today = new Date();
-  const [status, setStatus] = useState('');
   const [isFilter, setIsFilter] = useState(false);
   const [selectedMonth, setSelectedMonth] = useState(month);
   const [selectedYear, setSelectedYear] = useState(year);
@@ -59,7 +58,7 @@ const AdminHistoryItems = ({navigation, route}: any) => {
   useFocusEffect(
     useCallback(() => {
       getJumlahLaporan();
-    }, [month || year]),
+    }, [month, year]),
   );
 
   useFocusEffect(
@@ -87,11 +86,13 @@ const AdminHistoryItems = ({navigation, route}: any) => {
     setIsLoading(true);
     try {
       const headers = {
-        Authorization: `Bearer ${dataUser.token}`, // Tambahkan token ke header dengan format Bearer
+        Authorization: `Bearer ${dataUser.token}`,
       };
 
       const response = await axios.get(
-        `${API_HOST}/api/laporan/amount?month=${month + 1}&year=${year}`,
+        `${API_HOST}/api/laporan/amount?month=${
+          selectedMonth + 1
+        }&year=${selectedYear}`,
         {headers},
       );
       setIsLoading(false);
@@ -110,7 +111,7 @@ const AdminHistoryItems = ({navigation, route}: any) => {
 
   const handleFilter = () => {
     dispatch(saveMonthAction(selectedMonth));
-    dispatch(saveYearAction(year));
+    dispatch(saveYearAction(selectedYear));
     setIsFilter(false);
   };
 
@@ -230,7 +231,6 @@ const AdminHistoryItems = ({navigation, route}: any) => {
 
   const handleNavigate = (options: string) => {
     navigation.navigate('AdminHistoryByStatus', {
-      dataUser: dataUser,
       status: options,
       month: month,
       year: year,
@@ -264,7 +264,7 @@ const AdminHistoryItems = ({navigation, route}: any) => {
                 styles.txtBold,
                 {fontSize: 17, flex: 1, textAlign: 'center'},
               ]}>
-              {getMonthName(month)} {year}
+              {getMonthName(month)} {selectedYear}
             </Text>
             <IconDropDown fill={`${MyColor.Light}`} />
           </TouchableOpacity>

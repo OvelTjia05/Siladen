@@ -33,6 +33,7 @@ import {
 import {CommonActions} from '@react-navigation/native';
 import {defineSocket} from '../../../socket';
 import {API_HOST} from '../../../config';
+import PushNotification from 'react-native-push-notification';
 
 const PasswordInput = ({placeholder, onChangeText, value}: any) => {
   const [secureTextEntry, setSecureTextEntry] = useState(true);
@@ -102,6 +103,7 @@ const AdminLogin = ({navigation}: any) => {
           dispatch(saveRoleAction(dataUser.role));
           dispatch(saveJobAction(dataUser.job));
           defineSocket();
+          PushNotification.subscribeToTopic('admin');
 
           navigation.dispatch(
             CommonActions.reset({
@@ -113,6 +115,20 @@ const AdminLogin = ({navigation}: any) => {
           setUsername('');
           setPassword('');
         } else {
+          const headers = {
+            Authorization: `Bearer ${token}`,
+          };
+
+          await axios.delete(`${API_HOST}/auth/user/logout`, {
+            headers,
+          });
+
+          await AsyncStorage.setItem('id_user', '');
+          await AsyncStorage.setItem('name', '');
+          await AsyncStorage.setItem('token', '');
+          await AsyncStorage.setItem('role', '');
+          await AsyncStorage.setItem('job', '');
+
           Alert.alert('Akun anda tidak terdaftar sebagai admin');
         }
       }

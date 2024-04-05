@@ -46,6 +46,7 @@ import {
 import {defineSocket, socket} from '../../../socket';
 import {API_HOST} from '../../../config';
 import {CommonActions} from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const SubmitLaporan = ({navigation, route}: any) => {
   const dispatch = useDispatch();
@@ -200,6 +201,35 @@ const SubmitLaporan = ({navigation, route}: any) => {
     }
   }, []);
 
+  const handleFCMNotif = async () => {
+    try {
+      const FCMKey: any = await AsyncStorage.getItem('fcm_key');
+
+      const headers = {
+        'Content-Type': 'application/JSON',
+        Authorization: `key=${FCMKey}`,
+      };
+
+      await axios.post(
+        `https://fcm.googleapis.com/fcm/send`,
+        {
+          soundName: 'default',
+          priority: 'high',
+          notification: {
+            title: 'Ada laporan masuk!',
+            body: dataUser.id_user
+              ? `${nameSelector} mengirim laporan, segera periksa!`
+              : `Laporan anonim, segera periksa!`,
+          },
+          to: `/topics/admin`,
+        },
+        {headers},
+      );
+    } catch (error) {
+      console.log('error fcm notif', error);
+    }
+  };
+
   const handleSubmit = async () => {
     if (!checked) {
       Alert.alert(
@@ -225,7 +255,6 @@ const SubmitLaporan = ({navigation, route}: any) => {
           response = await axios.post(
             `${API_HOST}/api/laporan/user/${dataUser.id_user}`,
             formData,
-
             {
               headers,
             },
@@ -245,13 +274,11 @@ const SubmitLaporan = ({navigation, route}: any) => {
           if (!dataUser.id_user) {
             defineSocket();
           }
-          const data = {
-            title: 'Ada laporan masuk!',
-            message: dataUser.id_user
-              ? `${nameSelector} mengirim laporan, segera periksa!`
-              : `Laporan anonim, segera periksa!`,
-          };
-          socket.emit('message admin', data);
+
+          handleFCMNotif();
+
+          socket.emit('message admin');
+
           Alert.alert(
             'Laporan Terkirim',
             'Laporan anda akan segera ditangani, terima kasih sudah mau membantu kami dalam meningkatkan kualitas pelayanan Rumah Sakit',

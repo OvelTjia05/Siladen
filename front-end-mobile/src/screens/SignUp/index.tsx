@@ -86,14 +86,15 @@ const SignUp = ({navigation}: any) => {
     } else {
       try {
         const response = await axios.post(`${API_HOST}/auth/user/register`, {
-          name,
-          username,
-          password,
-          konfirmasi_password,
+          name: name.trim(),
+          username: username.trim(),
+          password: password.trim(),
+          konfirmasi_password: konfirmasi_password.trim(),
           job,
           role,
         });
         if (response.data.code == '201') {
+          // console.log('daftar', response);
           Alert.alert('Akun berhasil dibuat', undefined, [
             {text: 'OK', onPress: () => navigation.navigate('Login')},
           ]);

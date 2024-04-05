@@ -61,11 +61,6 @@ const HomePage = ({navigation, route}: any) => {
     socket.emit('join admin', 'admin');
     socket.on('message received', (data: any) => {
       getLatestLaporan();
-      PushNotification.localNotification({
-        channelId: `${channel_ids}`,
-        title: data.title,
-        message: data.message,
-      });
     });
   }, []);
 

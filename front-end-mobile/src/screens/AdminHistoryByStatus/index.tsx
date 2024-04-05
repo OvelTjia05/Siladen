@@ -47,6 +47,7 @@ const AdminHistoryByStatus = ({navigation, route}: any) => {
   useFocusEffect(
     useCallback(() => {
       getLaporan();
+      // console.log('ini di status', route.params);
     }, []),
   );
 
@@ -197,13 +198,12 @@ const AdminHistoryByStatus = ({navigation, route}: any) => {
                 // marginBottom: 20,
               }}
               key={index}
-              onPress={() =>
+              onPress={() => {
                 navigation.navigate('AdminHistoryDetail', {
                   id_laporan: item.id_laporan,
                   status: item.status,
-                  dataUser: dataUser,
-                })
-              }>
+                });
+              }}>
               <Image
                 source={item.gambar ? {uri: item.gambar} : ImagePlaceHolder}
                 style={styles.img}

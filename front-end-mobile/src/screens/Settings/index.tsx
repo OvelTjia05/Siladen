@@ -32,6 +32,7 @@ import {ProfilePlaceHolder} from '../../assets/images';
 import {MyFont} from '../../components/atoms/MyFont';
 import {socket} from '../../../socket';
 import {API_HOST} from '../../../config';
+import PushNotification from 'react-native-push-notification';
 
 const screenW = Dimensions.get('screen').width;
 const w = screenW * 0.5;
@@ -93,6 +94,14 @@ const Settings = ({navigation}: any) => {
       dispatch(saveJobAction(''));
 
       if (response.data.code === '200') {
+        if (role === 'user') {
+          await axios.patch(`${API_HOST}/api/user/device-token/${id_user}`, {
+            device_token: null,
+          });
+        } else {
+          PushNotification.unsubscribeFromTopic('admin');
+        }
+
         socket.off('message received');
         socket.off('admin received');
         socket.disconnect();
@@ -106,6 +115,7 @@ const Settings = ({navigation}: any) => {
       }
       setIsLoading(false);
     } catch (error: any) {
+      console.log('error logout', error);
       setIsLoading(false);
       Alert.alert(
         'Terjadi kesalahan',
